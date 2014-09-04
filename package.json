@@ -1,0 +1,16 @@
+{
+  "name": "Capriza Busybee",
+  "version": "0.0.1",
+  "description": "Capriza Busybee is a high performance message queueing system backed by Redis",
+  "dependencies": {
+    "bunyan": "^1.0.0",
+    "bunyan-format": "^0.1.1",
+    "redis": "0.12.1",
+    "hiredis": "0.1.17"
+  },
+  "engines": {
+    "node": ">=0.10.3"
+  },
+  "devDependencies": {
+  }
+}
