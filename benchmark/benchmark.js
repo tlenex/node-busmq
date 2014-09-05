@@ -12,7 +12,7 @@ process.on('uncaughtException', function (err) {
   process.exit(1);
 });
 
-var totalMessages = config.numWorkers * config.numQueues * config.numMessages;
+//var totalMessages = config.numWorkers * config.numQueues * config.numMessages;
 
 if (cluster.isMaster) {
   // Print summary
@@ -21,9 +21,9 @@ if (cluster.isMaster) {
   console.log('------------------------');
   console.log(config.numWorkers + ' workers');
   console.log(config.numQueues + ' queues per worker');
-  console.log(config.numMessages + ' messages per queue');
+//  console.log(config.numMessages + ' messages per queue');
   console.log(config.messageLength + ' bytes per message');
-  console.log(totalMessages + ' messages per cycle');
+//  console.log(totalMessages + ' messages per cycle');
   console.log('------------------------');
   console.log('');
 
@@ -44,6 +44,8 @@ if (cluster.isMaster) {
   var cycle = 0;
   var ready = 0
   var reported = 0;
+  var totalPushed = 0;
+  var totalConsumed = 0;
   cluster.on('online', function(worker) {
     worker.on('message', function(message) {
       logger.debug('received message ' + message + ' from worker ' + worker.id);
@@ -55,13 +57,19 @@ if (cluster.isMaster) {
             sendStart();
           }
           break;
-        case 'report':
+        default:
+          var report = JSON.parse(message);
+          totalPushed += report.p;
+          totalConsumed += report.c;
           if (++reported === config.numWorkers) {
             var diff = process.hrtime(startTime);
             var seconds = (diff[0] * 1e9 + diff[1])/(1000*1000*1000);
-            console.log('%d: %s msgs/sec (duration %d seconds)', ++cycle, totalMessages / seconds, seconds);
-            sendStart();
+            console.log('[%d] push: %d msgs/sec, consume: %d msgs/sec (duration %s seconds)', ++cycle, totalPushed / seconds, totalConsumed / seconds, seconds);
+            //sendStart();
             reported = 0;
+            totalPushed = 0;
+            totalConsumed = 0;
+            startTime = process.hrtime();
           }
           break;
       }

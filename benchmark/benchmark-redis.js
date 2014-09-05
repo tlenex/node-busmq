@@ -1,8 +1,6 @@
 var crypto = require('crypto');
-var bunyan = require('bunyan');
 var cluster = require('cluster');
 var config = require('./config').redis;
-var logger = bunyan.createLogger({name: 'bus', level: config.logLevel});
 
 process.on('uncaughtException', function (err) {
   console.log('Caught exception: ' + ((err instanceof Error) ? err.stack : err));
@@ -13,16 +11,14 @@ var producers = [];
 var consumers = [];
 
 // -- create the bus
-var bus = require('./../lib/bus').withLog(logger);
+var bus = require('./../lib/bus');
 bus.on('error', function(err) {
   console.log('BUS ERROR: ' + err);
 });
 bus.on('offline', function(err) {
-  //logger.debug('Bus is offline');
   cluster.worker.disconnect();
 });
 bus.on('online', function() {
-  //logger.debug('Bus is online');
   setupBenchmark();
 });
 bus.connect(config.urls);
@@ -36,25 +32,25 @@ function setupBenchmark() {
 
 // -- setup queues
 var queuesReady = 0;
-var queuesDone = 0;
+var totalConsumed = 0;
+var totalPushed = 0;
 function setupQueue(i) {
   var pqName = 'w'+((workerId+1) % config.numWorkers)+'-q'+i;
   var cqName = 'w'+(workerId % config.numWorkers)+'-q'+i;
-//  console.log('worker %s, produce to %s, consume from %s', workerId, pqName, cqName);
   var p = bus.queue(pqName);
   p.on('error', function(err) {
-    logger.error('producer ERROR: ' + err);
+    console.error('producer ERROR: ' + err);
   });
   p.on('attaching', function() {
-    //logger.debug('producer ATTACHING');
   });
   p.on('detached', function() {
-    //logger.debug('producer DETACHED');
     producers.pop();
     tryDisconnect();
   });
   p.on('closed', function() {
-    //logger.debug('producer CLOSED');
+  });
+  p.on('drain', function() {
+    pump(p);
   });
   p.on('attached', function() {
     var c = bus.queue(cqName);
@@ -70,30 +66,18 @@ function setupQueue(i) {
       }
     });
     c.on('message', function(m) {
-//      console.log('[%s] consumed=%s', c.name, c.consumed);
-        // this queue is done
-      if (c.consumed() === config.numMessages) {
-        c._consumed = 0;
-        // are all queues done?
-        if (++queuesDone === config.numQueues) {
-          queuesDone = 0;
-          reportBenchmark();
-        }
-      }
+      ++totalConsumed;
     });
     c.on('error', function(err) {
-      logger.error('consumer ERROR: ' + err);
+      console.error('consumer ERROR: ' + err);
     });
     c.on('attaching', function() {
-      //logger.debug('consumer ATTACHING');
     });
     c.on('detached', function() {
-      //logger.debug('consumer DETACHED');
       consumers.pop();
       tryDisconnect();
     });
     c.on('closed', function() {
-      //logger.debug('consumer CLOSED');
     });
     consumers.push(c);
     c.attach();
@@ -122,11 +106,17 @@ function startBenchmark() {
   producers.forEach(function(p) {
     pump(p);
   });
+  setInterval(reportBenchmark, 3000);
 }
 
 function reportBenchmark() {
   if (cluster.isWorker) {
-    process.send('report');
+    var pushed = totalPushed;
+    var consumed = totalConsumed;
+    totalPushed = 0;
+    totalConsumed = 0;
+    process.send(JSON.stringify({p: pushed, c: consumed}));
+
   }
 //  producers.forEach(function(p) {
 //    p.detach();
@@ -138,15 +128,19 @@ function reportBenchmark() {
 
 // -- pump messages on a producer
 function pump(p) {
-  function push() {
-    p.push(config.message, function() {
-      if (p.pushed() < config.numMessages) {
-        return push();
-      }
-      p._pushed = 0;
-    });
+  function _push() {
+    ++totalPushed;
+    if (p.push(config.message)) {
+      setImmediate(_push);
+    }
+//    p.push(config.message, function() {
+//      if (p.pushed() < config.numMessages) {
+//        return push();
+//      }
+//      p._pushed = 0;
+//    });
   }
-  push();
+  _push();
 }
 
 var workerId = _workerId();
