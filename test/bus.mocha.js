@@ -18,7 +18,7 @@ function redisStart(port, done) {
 
 function redisStop(redis, done) {
   redis.close(function() {
-    redises = redises.splice(redises.indexOf(redis), 1);
+    redises.splice(redises.indexOf(redis), 1);
     done();
   });
 }
