@@ -11,7 +11,7 @@ var producers = [];
 var consumers = [];
 
 // -- create the bus
-var bus = require('./../lib/bus');
+var bus = require('./../lib/bus').create();
 bus.on('error', function(err) {
   console.log('BUS ERROR: ' + err);
 });

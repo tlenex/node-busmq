@@ -64,8 +64,7 @@ if (cluster.isMaster) {
           if (++reported === config.numWorkers) {
             var diff = process.hrtime(startTime);
             var seconds = (diff[0] * 1e9 + diff[1])/(1000*1000*1000);
-            console.log('[%d] push: %d msgs/sec, consume: %d msgs/sec (duration %s seconds)', ++cycle, totalPushed / seconds, totalConsumed / seconds, seconds);
-            //sendStart();
+            console.log('[%d] push: %d msgs/sec, consume: %d msgs/sec', ++cycle, Math.ceil(totalPushed / seconds), Math.ceil(totalConsumed / seconds));
             reported = 0;
             totalPushed = 0;
             totalConsumed = 0;

@@ -3,7 +3,7 @@ var crypto = require('crypto');
 var binary = crypto.randomBytes(256).toString('utf8');
 console.log('BINARY LENGTH: ' + binary.length);
 
-var bus = require('./lib/bus');
+var bus = require('./lib/bus').create();
 
 bus.on('error', function(err) {
   console.error('ERROR: ' + err);

@@ -7,9 +7,8 @@ var logLevel = 'info';
 exports.redis = {
   system: 'redis',
   urls: ['redis://127.0.0.1:7776', 'redis://127.0.0.1:7777', 'redis://127.0.0.1:7778', 'redis://127.0.0.1:7779'],
+  numWorkers: 2,
   numQueues: 10,
-  numMessages: 5,
-  numWorkers: 4,
   messageLength: messageLength,
   message: message,
   logLevel: logLevel
@@ -18,9 +17,8 @@ exports.redis = {
 exports.rabbitmq = {
   system: 'rabbitmq',
   urls: 'amqp://127.0.0.1:5672',
-  numQueues: 100,
-  numMessages: 50,
   numWorkers: 4,
+  numQueues: 100,
   messageLength: messageLength,
   message: message,
   logLevel: logLevel
