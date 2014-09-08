@@ -3,6 +3,11 @@ var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
 
 var redisPorts = [9888];
+var redisUrls = [];
+redisPorts.forEach(function(port) {
+  redisUrls.push('redis://127.0.0.1:'+port);
+})
+
 var redises = [];
 
 function redisStart(port, done) {
@@ -23,7 +28,7 @@ function redisStop(redis, done) {
   });
 }
 
-describe('Bus usage', function() {
+describe('Bus', function() {
 
   if (this.timeout() === 0) {
     this.enableTimeouts(false);
@@ -66,7 +71,7 @@ describe('Bus usage', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect('redis://127.0.0.1:9888');
+      bus.connect(redisUrls);
     });
 
     it('should emit error if calling connect twice', function(done) {
@@ -92,7 +97,7 @@ describe('Bus usage', function() {
           done('offline should not have been called twice');
         }
       });
-      bus.connect('redis://127.0.0.1:9888');
+      bus.connect(redisUrls);
     });
 
     it('should emit offline when redis goes down, and online when it\'s back again', function(done) {
@@ -120,7 +125,304 @@ describe('Bus usage', function() {
           done('too many offline events');
         }
       });
-      bus.connect('redis://127.0.0.1:9888');
+      bus.connect(redisUrls);
     })
   })
+
+  describe('producers and consumers', function() {
+
+    it('should receive attach/detach events', function(done) {
+      var count = 0;
+      function _count() {
+        ++count;
+      }
+      var bus = Bus.create();
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('detaching', _count);
+        p.on('detached', function() {
+          _count();
+          bus.disconnect();
+        });
+        p.on('attaching', _count);
+        p.on('attached', function() {
+          _count();
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('detaching', _count);
+          c.on('detached', function() {
+            _count();
+            p.detach();
+          });
+          c.on('attaching', _count);
+          c.on('attached', function() {
+            _count();
+            c.detach();
+          });
+          c.attach();
+        });
+        p.attach();
+      });
+      bus.on('offline', function() {
+        count.should.be.exactly(8);
+        done();
+      });
+      bus.connect(redisUrls);
+    });
+
+    describe('consuming messages', function() {
+
+      it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
+        var testMessage = 'test message';
+        var consumed = 0;
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('detached', function() {
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              ++consumed;
+              c.detach();
+            });
+            c.on('detached', function() {
+              bus.disconnect();
+            });
+            c.on('attached', function() {
+              // wait for messages
+              c.consume();
+            });
+            c.attach();
+          });
+          p.on('attached', function() {
+            // push a message
+            p.push(testMessage);
+            p.detach();
+          });
+          p.attach();
+        });
+        bus.on('offline', function() {
+          consumed.should.be.exactly(1);
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('producer attach -> consumer attach -> producer push -> consumer receive', function(done) {
+        var testMessage = 'test message';
+        var consumed = 0;
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('attached', function() {
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              ++consumed;
+              p.detach();
+              c.detach();
+            });
+            c.on('detached', function() {
+              bus.disconnect();
+            });
+            c.on('attached', function() {
+              // wait for messages
+              c.consume();
+              // push a messages
+              p.push(testMessage)
+            });
+            c.attach();
+          });
+          p.attach();
+        });
+        bus.on('offline', function() {
+          consumed.should.be.exactly(1);
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('consumer attach -> producer attach -> producer push -> consumer receive', function(done) {
+        var testMessage = 'test message';
+        var consumed = 0;
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create consumer
+          var p;
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            ++consumed;
+            c.detach();
+            p.detach();
+          });
+          c.on('attached', function() {
+            // wait for messages
+            c.consume();
+            // create producer
+            p = bus.queue(qName);
+            p.on('error', done);
+            p.on('detached', function() {
+              bus.disconnect();
+            });
+            p.on('attached', function() {
+              // push a messages
+              p.push(testMessage)
+            });
+            p.attach();
+          });
+          c.attach();
+
+        });
+        bus.on('offline', function() {
+          consumed.should.be.exactly(1);
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('producer attach -> producer push(5) -> consumer attach -> consumer receive(5)', function(done) {
+        var testMessage = 'test message';
+        var consumed = 0;
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('detached', function() {
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              if (++consumed === 5) {
+                c.detach();
+              }
+            });
+            c.on('detached', function() {
+              bus.disconnect();
+            });
+            c.on('attached', function() {
+              // wait for messages
+              c.consume();
+            });
+            c.attach();
+          });
+          p.on('attached', function() {
+            // push 5 message
+            for (var i = 0; i < 5; ++i) {
+              p.push(testMessage);
+            }
+            p.detach();
+          });
+          p.attach();
+        });
+        bus.on('offline', function() {
+          consumed.should.be.exactly(5);
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
+        var testMessage = 'test message';
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('detached', function() {
+            setTimeout(function() {
+              // ttl is 2 seconds, we re-attach after 1 second
+              p.exists(function(exists) {
+                exists.should.be.exactly(true);
+                bus.disconnect();
+              });
+            }, 1000);
+          });
+          p.on('attached', function() {
+            p.push(testMessage);
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              done('message should not have been received')
+            });
+            c.on('attached', function() {
+              c.detach();
+              p.detach();
+            });
+            c.attach();
+          });
+          p.attach({ttl: 5});
+        });
+        bus.on('offline', function() {
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('queue should expire: producer attach -> consumer attach -> producer push -> detach all', function(done) {
+        var testMessage = 'test message';
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('detached', function() {
+
+          });
+          p.on('attached', function() {
+            p.push(testMessage);
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              done('message should not have been received')
+            });
+            c.on('detached', function() {
+              // ttl is 1 second, so the queue must be expired after 1.5 seconds
+              setTimeout(function() {
+                c.exists(function(exists) {
+                  exists.should.be.exactly(false);
+                  bus.disconnect();
+                });
+              }, 1500);
+            });
+            c.on('attached', function() {
+              c.detach();
+              p.detach();
+            });
+            c.attach();
+          });
+          p.attach({ttl: 1});
+        });
+        bus.on('offline', function() {
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+    });
+
+  });
 });
