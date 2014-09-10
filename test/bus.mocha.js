@@ -342,6 +342,51 @@ describe('Bus', function() {
         bus.connect(redisUrls);
       });
 
+      it('producer push(5) -> producer attach -> consumer attach -> consumer receive(5)', function(done) {
+        var testMessage = 'test message';
+        var consumed = 0;
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var qName = 'test'+Math.random();
+          // create producer
+          var p = bus.queue(qName);
+          p.on('error', done);
+          p.on('detached', function() {
+            var c = bus.queue(qName);
+            c.on('error', done);
+            c.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              if (++consumed === 5) {
+                c.detach();
+              }
+            });
+            c.on('detached', function() {
+              bus.disconnect();
+            });
+            c.on('attached', function() {
+              // wait for messages
+              c.consume();
+            });
+            c.attach();
+          });
+          p.on('attached', function() {
+            p.detach();
+          });
+          // push 5 message
+          for (var i = 0; i < 5; ++i) {
+            p.push(testMessage);
+          }
+          // attach
+          p.attach();
+        });
+        bus.on('offline', function() {
+          consumed.should.be.exactly(5);
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
       it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
         var testMessage = 'test message';
         var bus = Bus.create();
