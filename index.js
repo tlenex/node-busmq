@@ -1,3 +1,3 @@
-var bus = require('lib/bus');
+var bus = require('./lib/bus');
 
 exports = module.exports.new = bus.create;
