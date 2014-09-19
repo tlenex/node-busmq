@@ -1,4 +1,4 @@
-require('should');
+var Should = require('should');
 var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
 
@@ -469,5 +469,151 @@ describe('Bus', function() {
       });
     });
 
+    describe('channels', function() {
+
+      it('server listens -> client connects', function(done) {
+        var testMessage = 'test message';
+        var sEvents = {'message': 0};
+        var cEvents = {'message': 0};
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var cName = 'test'+Math.random();
+          var cServer = bus.channel(cName);
+          var cClient = bus.channel(cName);
+          cServer.on('error', function(error) {
+            sEvents['error'] = error;
+            bus.disconnect();
+          });
+          cServer.on('ready', function() {
+            sEvents['ready'] = true;
+            cClient.on('error', function(error) {
+              cEvents['error'] = error;
+              bus.disconnect();
+            });
+            cClient.on('ready', function() {
+              cEvents['ready'] = true;
+            });
+            cClient.on('connect', function() {
+              cEvents['connect'] = true;
+              cClient.send(testMessage);
+            });
+            cClient.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              if (++cEvents['message'] < 5) {
+                cClient.send(testMessage);
+              } else {
+                cClient.end();
+              }
+            });
+            cClient.on('end', function() {
+              cEvents['end'] = true;
+            });
+            cClient.connect();
+          });
+          cServer.on('connect', function() {
+            sEvents['connect'] = true;
+          });
+          cServer.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            ++sEvents['message'];
+            cServer.send(testMessage);
+          });
+          cServer.on('end', function() {
+            sEvents['end'] = true;
+            bus.disconnect();
+          });
+          cServer.listen();
+        });
+        bus.on('offline', function() {
+          Should(sEvents['ready']).equal(true);
+          Should(sEvents['connect']).equal(true);
+          Should(sEvents['message']).equal(5);
+          Should(sEvents['end']).equal(true);
+          Should(sEvents['error']).equal(undefined);
+
+          Should(cEvents['ready']).equal(true);
+          Should(cEvents['connect']).equal(true);
+          Should(cEvents['message']).equal(5);
+          Should(cEvents['end']).equal(undefined);
+          Should(cEvents['error']).equal(undefined);
+
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+
+      it('client connects -> server listens', function(done) {
+        var testMessage = 'test message';
+        var sEvents = {'message': 0};
+        var cEvents = {'message': 0};
+        var bus = Bus.create();
+        bus.on('error', done);
+        bus.on('online', function() {
+          var cName = 'test'+Math.random();
+          var cServer = bus.channel(cName);
+          var cClient = bus.channel(cName);
+          cClient.on('error', function(error) {
+            cEvents['error'] = error;
+            bus.disconnect();
+          });
+          cClient.on('ready', function() {
+            cEvents['ready'] = true;
+            cServer.on('error', function(error) {
+              sEvents['error'] = error;
+              bus.disconnect();
+            });
+            cServer.on('ready', function() {
+              sEvents['ready'] = true;
+            });
+            cServer.on('connect', function() {
+              sEvents['connect'] = true;
+              cServer.send(testMessage);
+            });
+            cServer.on('message', function(message) {
+              message.should.be.exactly(testMessage);
+              if (++sEvents['message'] < 5) {
+                cServer.send(testMessage);
+              } else {
+                cServer.end();
+              }
+            });
+            cServer.on('end', function() {
+              sEvents['end'] = true;
+            });
+            cServer.listen();
+          });
+          cClient.on('connect', function() {
+            cEvents['connect'] = true;
+          });
+          cClient.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            ++cEvents['message'];
+            cClient.send(testMessage);
+          });
+          cClient.on('end', function() {
+            cEvents['end'] = true;
+            bus.disconnect();
+          });
+          cClient.connect();
+        });
+        bus.on('offline', function() {
+          Should(sEvents['ready']).equal(true);
+          Should(sEvents['connect']).equal(true);
+          Should(sEvents['message']).equal(5);
+          Should(sEvents['end']).equal(undefined);
+          Should(sEvents['error']).equal(undefined);
+
+          Should(cEvents['ready']).equal(true);
+          Should(cEvents['connect']).equal(true);
+          Should(cEvents['message']).equal(5);
+          Should(cEvents['end']).equal(true);
+          Should(cEvents['error']).equal(undefined);
+
+          done();
+        });
+        bus.connect(redisUrls);
+      });
+    });
   });
 });
