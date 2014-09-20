@@ -485,17 +485,17 @@ describe('Bus', function() {
             sEvents['error'] = error;
             bus.disconnect();
           });
-          cServer.on('ready', function() {
-            sEvents['ready'] = true;
+          cServer.on('connect', function() {
+            sEvents['connect'] = true;
             cClient.on('error', function(error) {
               cEvents['error'] = error;
               bus.disconnect();
             });
-            cClient.on('ready', function() {
-              cEvents['ready'] = true;
-            });
             cClient.on('connect', function() {
               cEvents['connect'] = true;
+            });
+            cClient.on('remote:connect', function() {
+              cEvents['remote:connect'] = true;
               cClient.send(testMessage);
             });
             cClient.on('message', function(message) {
@@ -511,8 +511,8 @@ describe('Bus', function() {
             });
             cClient.connect();
           });
-          cServer.on('connect', function() {
-            sEvents['connect'] = true;
+          cServer.on('remote:connect', function() {
+            sEvents['remote:connect'] = true;
           });
           cServer.on('message', function(message) {
             message.should.be.exactly(testMessage);
@@ -526,14 +526,14 @@ describe('Bus', function() {
           cServer.listen();
         });
         bus.on('offline', function() {
-          Should(sEvents['ready']).equal(true);
           Should(sEvents['connect']).equal(true);
+          Should(sEvents['remote:connect']).equal(true);
           Should(sEvents['message']).equal(5);
           Should(sEvents['end']).equal(true);
           Should(sEvents['error']).equal(undefined);
 
-          Should(cEvents['ready']).equal(true);
           Should(cEvents['connect']).equal(true);
+          Should(cEvents['remote:connect']).equal(true);
           Should(cEvents['message']).equal(5);
           Should(cEvents['end']).equal(undefined);
           Should(cEvents['error']).equal(undefined);
@@ -557,17 +557,17 @@ describe('Bus', function() {
             cEvents['error'] = error;
             bus.disconnect();
           });
-          cClient.on('ready', function() {
-            cEvents['ready'] = true;
+          cClient.on('connect', function() {
+            cEvents['connect'] = true;
             cServer.on('error', function(error) {
               sEvents['error'] = error;
               bus.disconnect();
             });
-            cServer.on('ready', function() {
-              sEvents['ready'] = true;
-            });
             cServer.on('connect', function() {
               sEvents['connect'] = true;
+            });
+            cServer.on('remote:connect', function() {
+              sEvents['remote:connect'] = true;
               cServer.send(testMessage);
             });
             cServer.on('message', function(message) {
@@ -583,8 +583,8 @@ describe('Bus', function() {
             });
             cServer.listen();
           });
-          cClient.on('connect', function() {
-            cEvents['connect'] = true;
+          cClient.on('remote:connect', function() {
+            cEvents['remote:connect'] = true;
           });
           cClient.on('message', function(message) {
             message.should.be.exactly(testMessage);
@@ -598,14 +598,14 @@ describe('Bus', function() {
           cClient.connect();
         });
         bus.on('offline', function() {
-          Should(sEvents['ready']).equal(true);
           Should(sEvents['connect']).equal(true);
+          Should(sEvents['remote:connect']).equal(true);
           Should(sEvents['message']).equal(5);
           Should(sEvents['end']).equal(undefined);
           Should(sEvents['error']).equal(undefined);
 
-          Should(cEvents['ready']).equal(true);
           Should(cEvents['connect']).equal(true);
+          Should(cEvents['remote:connect']).equal(true);
           Should(cEvents['message']).equal(5);
           Should(cEvents['end']).equal(true);
           Should(cEvents['error']).equal(undefined);
