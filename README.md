@@ -3,7 +3,7 @@
 A High performance, highly-available and scalable, message bus and message queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
-## Core Concepts
+### Core Concepts
 
 * High-availability and scalability through the use of multiple redis instances
 * Event based message queues
@@ -11,7 +11,7 @@ Message queues are backed by [Redis](http://redis.io/), a high performance, in-m
 * Delivers a message at most once
 * Queues are automatically expired after a pre-defined idle time
 
-## High Availability and Scaling
+### High Availability and Scaling
 
 Connecting the bus to multiple redis instances provides high-availability and scaling.
 
@@ -21,7 +21,7 @@ is selected by performing a calculation on the queue/channel name.
 High availability is achieved by using standard redis high availability setups, such as
 [Redis Sentinal](http://redis.io/topics/sentinel)
 
-### Bus
+## Bus
 
 The bus holds connections to one or more redis instances and is used
 to create ``queue``s and ``channel``s.
@@ -170,8 +170,7 @@ bus.on('online', function() {
 
 Enough with examples. Let's see the API.
 
-Bus API
-===
+### Bus API
 
 ##### bus#create()
 
@@ -216,7 +215,7 @@ Create a new [Channel](#channel) instance.
 * ``local`` - \[optional\]. Specifies the local endpoint name of the channel. default is ``local``.
 * ``remote`` - \[optional\]. Specifies the remote endpoint name of the channel. default is ``remote``.
 
-#### Bus Events
+### Bus Events
 
 The bus emits the following events:
 
@@ -224,7 +223,7 @@ The bus emits the following events:
 * ``offline`` - emitted when the bus loses connections to the redis instances
 * ``error`` - an error occurs
 
-### Queue
+## Queue
 
 A queue of messages.
 
@@ -252,7 +251,7 @@ q.attach();
 q.detach();
 ```
 
-#### Queue API
+### Queue API
 
 ##### queue#attach([options])
 
