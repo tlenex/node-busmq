@@ -153,7 +153,7 @@ Client endpoint:
 
 ```javascript
 bus.on('online', function() {
-  var c = bus.channel('bar', 'client', 'server'); // provide explicit names to the endpoints
+  var c = bus.channel('zoo', 'client', 'server'); // provide explicit names to the endpoints
   c.on('connected', function() {
     // connected to the channel
   });
