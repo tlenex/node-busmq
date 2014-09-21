@@ -305,9 +305,13 @@ Closes the queue and destroys all messages. Emits the ``closed`` event once it i
 
 ### Channel API
 
+##### chanel#connect()
+
+Connects to the channel. Consumes
+
 #### Channel Events
 
-# License
+## License
 
 The MIT License (MIT)
 
