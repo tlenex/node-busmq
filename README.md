@@ -32,7 +32,7 @@ node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) mo
 so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
 achieve the best performance.
 
-##### Connecting to a bus
+#### Connecting to a bus
 
 ```javascript
 var Bus = require('node-busmq');
@@ -54,7 +54,7 @@ bus.connect('redis://192.168.0.1:6359');
 bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
 ```
 
-##### Using a queue
+#### Using a queue
 
 Producer:
 
@@ -88,7 +88,7 @@ bus.on('online', function() {
 ```
 
 
-##### Using a channel (default roles)
+#### Using a channel (default roles)
 
 Server endpoint:
 
@@ -128,7 +128,7 @@ bus.on('online', function() {
 });
 ```
 
-##### Using a channel (explicit roles)
+#### Using a channel (explicit roles)
 
 Server endpoint:
 
