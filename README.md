@@ -170,9 +170,8 @@ bus.on('online', function() {
 
 Enough with examples. Let's see the API.
 
+Bus API
 ===
-
-#### Bus API
 
 ##### bus#create()
 
