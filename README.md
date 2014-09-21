@@ -54,6 +54,25 @@ bus.connect('redis://192.168.0.1:6359');
 bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
 ```
 
+## Queue
+
+A queue of messages.
+
+Messages are consumed in they order that they are pushed into the queue.
+Once a message is consumed, it will never be consumed again.
+
+Any number of clients can produce messages to a queue, and any number of consumers
+can consume messages from a queue. A message is consumed by one consumer at most.
+
+#### Attach and detach
+
+To push and consume messages, first attach to the queue.
+Once attached, it is possible to push messages and start consuming messages from the queue.
+The queue will remain in existence for as long as it has at least one attachment.
+
+To stop using a queue, detach from it. Once a queue has no more attachments, it will automatically expire
+after a predefined ttl (losing any messages in the queue).
+
 #### Using a queue
 
 Producer:
@@ -87,6 +106,11 @@ bus.on('online', function() {
 });
 ```
 
+## Channel
+
+A bi-directional channel for peer-to-peer communication. Under the hood, a channel uses two message queues,
+where each peer pushes messages to one queue and consumes messages from the other queue.
+It does not matter which peer connects to the channel first.
 
 #### Using a channel (default roles)
 
@@ -168,6 +192,18 @@ bus.on('online', function() {
 });
 ```
 
+
+```javascript
+var q = bus.queue('myqueue');
+q.attach();
+
+// ... do some stuff ...
+
+q.detach();
+```
+
+## API
+
 Enough with examples. Let's see the API.
 
 ### Bus API
@@ -223,34 +259,6 @@ The bus emits the following events:
 * ``offline`` - emitted when the bus loses connections to the redis instances
 * ``error`` - an error occurs
 
-## Queue
-
-A queue of messages.
-
-Messages are consumed in they order that they are pushed into the queue.
-Once a message is consumed, it will never be consumed again.
-
-Any number of clients can produce messages to a queue, and any number of consumers
-can consume messages from a queue. A message is consumed by one consumer at most.
-
-#### Attach and detach
-
-To push and consume messages, first attach to the queue.
-Once attached, it is possible to push messages and start consuming messages from the queue.
-The queue will remain in existence for as long as it has at least one attachment.
-
-To stop using a queue, detach from it. Once a queue has no more attachments, it will automatically expire
-after a predefined ttl (losing any messages in the queue).
-
-```javascript
-var q = bus.queue('myqueue');
-q.attach();
-
-// ... do some stuff ...
-
-q.detach();
-```
-
 ### Queue API
 
 ##### queue#attach([options])
@@ -270,17 +278,9 @@ Detach from the queue. The queue will continue to live for as long as it has at 
 Once a queue has no more attachments, it will continue to exist for the predefined ``ttl``, or until it
 is attached to again.
 
-#### Queue Events
+### Queue Events
 
-
-
-### Channel
-
-A bi-directional channel for peer-to-peer communication. Under the hood, a channel uses two message queues,
-where each peer pushes messages to one queue and consumes messages from the other queue.
-It does not matter which peer connects to the channel first.
-
-#### Channel API
+### Channel API
 
 #### Channel Events
 
