@@ -6,9 +6,9 @@ Message queues are backed by [Redis](http://redis.io/), a high performance, in-m
 ## Core Concepts
 
 * High-availability and scalability through the use of multiple redis instances
-* Event based message queues and channels. publish/subscribe functionality _is not_ provided
+* Event based message queues
+* event based bi-directional channels for peer-to-peer communication (backed by message queues)
 * Delivers a message at most once
-* Provides a bi-directional channel for peer-to-peer communication (backed by message queues)
 * Queues are automatically expired after a pre-defined idle time
 
 ## High Availability and Scaling
@@ -32,9 +32,7 @@ node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) mo
 so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
 achieve the best performance.
 
-#### Connecting to a bus
-
-Nothing better than an example:
+##### Connecting to a bus
 
 ```javascript
 var Bus = require('node-busmq');
@@ -56,11 +54,127 @@ bus.connect('redis://192.168.0.1:6359');
 bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
 ```
 
+##### Using a queue
+
+Producer:
+
+```javascript
+bus.on('online', function() {
+  var q = bus.queue('foo');
+  q.on('attached', function() {
+    q.push({hello: 'world'});
+    q.push('my name if foo');
+    q.detach();
+  });
+  q.attach();
+});
+```
+
+Consumer:
+
+```javascript
+bus.on('online', function() {
+  var q = bus.queue('foo');
+  q.on('attached', function() {
+    q.consume();
+  });
+  q.on('message', function(message) {
+    if (message === 'my name if foo') {
+      q.detach();
+    }
+  });
+  q.attach();
+});
+```
+
+
+##### Using a channel (default roles)
+
+Server endpoint:
+
+```javascript
+bus.on('online', function() {
+  var c = bus.channel('bar'); // use default names for the endpoints
+  c.on('connected', function() {
+    // connected to the channel
+  });
+  c.on('remote:connected', function() {
+    // the client is connected to the channel
+    c.send('hello client!');
+  });
+  c.on('message', function(message) {
+    // received a message from the client
+  });
+  c.listen(); // reverse the endpoint roles and connect to the channel
+});
+```
+
+Client endpoint:
+
+```javascript
+bus.on('online', function() {
+  var c = bus.channel('bar'); // use default names for the endpoints
+  c.on('connected', function() {
+    // connected to the channel
+  });
+  c.on('remote:connected', function() {
+    // the server is connected to the channel
+    c.send('hello server!');
+  });
+  c.on('message', function(message) {
+    // received a message from the server
+  });
+  c.connect(); // connect to the channel
+});
+```
+
+##### Using a channel (explicit roles)
+
+Server endpoint:
+
+```javascript
+bus.on('online', function() {
+  var c = bus.channel('zoo', 'server', 'client'); // provide explicit names to the endpoints
+  c.on('connected', function() {
+    // connected to the channel
+  });
+  c.on('remote:connected', function() {
+    // the client is connected to the channel
+    c.send('hello client!');
+  });
+  c.on('message', function(message) {
+    // received a message from the client
+  });
+  c.connect(); // connect to the channel
+});
+```
+
+Client endpoint:
+
+```javascript
+bus.on('online', function() {
+  var c = bus.channel('bar', 'client', 'server'); // provide explicit names to the endpoints
+  c.on('connected', function() {
+    // connected to the channel
+  });
+  c.on('remote:connected', function() {
+    // the server is connected to the channel
+    c.send('hello server!');
+  });
+  c.on('message', function(message) {
+    // received a message from the server
+  });
+  c.connect(); // connect to the channel
+});
+```
+
+Enough with examples. Let's see the API.
+
 #### Bus API
 
 ##### bus#create()
 
-Create a new BusMQ instance.
+Create a new bus instance.
 
 ##### bus#withLog(log)
 
