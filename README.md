@@ -251,9 +251,7 @@ Create a new [Channel](#channel) instance.
 * ``local`` - \[optional\]. Specifies the local endpoint name of the channel. default is ``local``.
 * ``remote`` - \[optional\]. Specifies the remote endpoint name of the channel. default is ``remote``.
 
-### Bus Events
-
-The bus emits the following events:
+#### Bus Events
 
 * ``online`` - emitted when the bus has successfully connected to all of the specified redis instances
 * ``offline`` - emitted when the bus loses connections to the redis instances
@@ -278,7 +276,32 @@ Detach from the queue. The queue will continue to live for as long as it has at 
 Once a queue has no more attachments, it will continue to exist for the predefined ``ttl``, or until it
 is attached to again.
 
-### Queue Events
+##### queue#push(message)
+
+Push a message to the queue. The message can be a JSON object or a string. 
+The message will remain in the queue until it is consumed by a consumer.
+
+##### queue#consume()
+
+Start consuming messages from the queue. 
+The ``message`` event is emitted whenever a message is consumed from the queue.
+
+##### queue#stop()
+
+Stop consuming messages from the queue.
+
+##### queue#close()
+
+Closes the queue and destroys all messages. Emits the ``closed`` event once it is closed.
+
+#### Queue Events
+
+* ``attaching`` - emitted when starting to attach
+* ``attached`` - emitted when attached to the queue. The listener callback receives ``true`` if the queue already existed and ``false`` if it was just created.
+* ``detaching`` - emitted when starting to detach
+* ``detached`` - emitted when detached from the queue. If no other clients are attached to the queue, the queue will remain alive for the ``ttl`` duration
+* ``message`` - emitted when a message is consumed from the queue. The listener callback receives the message as a string.
+* ``error`` - emitted when some error occurs. The listener callback receives the error.
 
 ### Channel API
 
