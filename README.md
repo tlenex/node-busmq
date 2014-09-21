@@ -112,6 +112,13 @@ A bi-directional channel for peer-to-peer communication. Under the hood, a chann
 where each peer pushes messages to one queue and consumes messages from the other queue.
 It does not matter which peer connects to the channel first.
 
+Each peer in the channel has a role. For all purposes roles are the same, except that the roles determine to which queue messages will be pushed and from which queue they will be consumed. To peers to communicate over the channel, they must have opposite roles.
+
+By default, a channel uses role `local` to consume messages and `remote` to push messages.
+Since peers must have opposite roles, if using the default roles, one peer must call `channel#listen` and the other peer must call `channel#connect`.
+
+It is also possible to specify other roles explicity, such as `client` and `server`. This enables specifying the local role and the remote role, and just connecting the channel without calling `listen`. Specifying roles explicitly may add to readability, but not much more than that. 
+
 #### Using a channel (default roles)
 
 Server endpoint:
@@ -158,7 +165,8 @@ Server endpoint:
 
 ```javascript
 bus.on('online', function() {
-  var c = bus.channel('zoo', 'server', 'client'); // provide explicit names to the endpoints
+  // local role is server, remote role is client
+  var c = bus.channel('zoo', 'server', 'client');
   c.on('connected', function() {
     // connected to the channel
   });
@@ -177,7 +185,9 @@ Client endpoint:
 
 ```javascript
 bus.on('online', function() {
-  var c = bus.channel('zoo', 'client', 'server'); // provide explicit names to the endpoints
+  // notice the reverse order of roles
+  // local role is client, remote role is server
+  var c = bus.channel('zoo', 'client', 'server');
   c.on('connected', function() {
     // connected to the channel
   });
@@ -248,8 +258,8 @@ Returns a new Queue instance. Call ``queue#attach`` before using the queue.
 Create a new [Channel](#channel) instance.
 
 * ``name`` - the name of the channel.
-* ``local`` - \[optional\]. Specifies the local endpoint name of the channel. default is ``local``.
-* ``remote`` - \[optional\]. Specifies the remote endpoint name of the channel. default is ``remote``.
+* ``local`` - \[optional\] specifies the local role. default is ``local``.
+* ``remote`` - \[optional\] specifies the remote role. default is ``remote``.
 
 #### Bus Events
 
@@ -305,11 +315,44 @@ Closes the queue and destroys all messages. Emits the ``closed`` event once it i
 
 ### Channel API
 
-##### chanel#connect()
+##### channel#connect()
 
-Connects to the channel. Consumes
+Connects to the channel. The `connect` event is emitted once connected to the channel.
+
+##### channel#listen()
+
+Connects to the channel with reverse semantics of the roles. 
+The `connect` event is emitted once connected to the channel.
+
+##### channel#send(message)
+
+Send a message to the peer
+
+##### channel#sendTo(endpoint, message)
+
+Send a message to the the specified endpoint. There is no need to connect to the channel with `channel#connect` or `channel#listen`.
+
+##### channel#disconnect()
+
+Disconnect from the channel. The channel remains open and a different peer can connect to it.
+
+##### channel#end()
+
+End the channel. No more messages can be pushed or consumed. This also caused the peer to diconnect from the channel and close the message queues.
+
+##### channel#isBound()
+
+Returns `true` if connected to the channel, `false` if not connected.
 
 #### Channel Events
+
+* `connect` - emitted when connected to the channel
+* `remote:connect` - emitted when a remote peer connects to the channel
+* `disconnect` - emitted when disconnected from the channel
+* `remote:disconnect` - emitted when the remote peer disconnects from the channel
+* `message` - emitted when a message is received from the channel. The listener callback receives the message as a string.
+* `end` - emitted when the remote peer ends the channel
+* `error` - emitted when an error occurs. The listener callback receives the error.
 
 ## License
 
