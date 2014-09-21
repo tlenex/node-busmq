@@ -1,4 +1,4 @@
-# BusMQ
+# node-busmq
 
 A High performance, highly-available and scalable, message bus and message queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
@@ -28,7 +28,7 @@ to create ``queue``s and ``channel``s.
 
 Node processes connecting to the same bus have access to and can use all queues and channels.
 
-BusMQ uses the great [node_redis](https://github.com/mranney/node_redis) module to communicate with the redis instances,
+node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) module to communicate with the redis instances,
 so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
 achieve the best performance.
 
@@ -58,44 +58,44 @@ bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
 
 #### Bus API
 
-##### ``bus#create()``
+##### bus#create()
 
 Create a new BusMQ instance.
 
-##### ``bus#withLog(log)``
+##### bus#withLog(log)
 
-Attach a logger to the bus instance. Return the bus instance.
+Attach a logger to the bus instance. Returns the bus instance.
 
-##### ``bus#withRedis(redis)``
+##### bus#withRedis(redis)
 
-Use the provided ``node_redis`` client to create connections. Return the bus instance.
+Use the provided ``node_redis`` client to create connections. Returns the bus instance.
 
-##### ``bus#connect(redis)``
+##### bus#connect(redis)
 
 Connect to the specified redis urls. ``redis`` can be a string or an array of string urls. A valid url has the form ``redis://<host_or_ip>[:port]``.
 
-Once connected to all redis instances, the ``online`` will be emitted. \
+Once connected to all redis instances, the ``online`` will be emitted.
 If the bus gets disconnected from the the redis instances, the ``offline`` event will be emitted.
 
-##### ``bus#disconnect()``
+##### bus#disconnect()
 
 Disconnect from the redis instances. Once disconnected, the ``offline`` event will be emitted.
 
-##### ``bus#isOnline()``
+##### bus#isOnline()
 
 Return ``true`` if the bus is online, ``false`` if the bus offline.
 
-##### ``bus#queue(name)``
+##### bus#queue(name)
 
-Create a new [Queue](#Queue) instance.
+Create a new [Queue](#queue) instance.
 
 * ``name`` - the name of the queue.
 
 Returns a new Queue instance. Call ``queue#attach`` before using the queue.
 
-##### ``bus#channel(name, [local, remote])``
+##### bus#channel(name, [local, remote])
 
-Create a new [Channel](#Channel) instance.
+Create a new [Channel](#channel) instance.
 
 * ``name`` - the name of the channel.
 * ``local`` - \[optional\]. Specifies the local endpoint name of the channel. default is ``local``.
@@ -139,7 +139,7 @@ q.detach();
 
 #### Queue API
 
-##### ``queue#attach([options])``
+##### queue#attach([options])
 
 Attach to the queue. If the queue does not already exist it is created.
 Once attached, the ``attached`` event is emitted.
@@ -150,7 +150,7 @@ Options:
 
 * ``ttl`` - duration in seconds for the queue to live without any attachments. default is 30 seconds.
 
-##### ``queue#detach()``
+##### queue#detach()
 
 Detach from the queue. The queue will continue to live for as long as it has at least one attachment.
 Once a queue has no more attachments, it will continue to exist for the predefined ``ttl``, or until it
