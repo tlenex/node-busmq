@@ -35,7 +35,7 @@ achieve the best performance.
 #### Connecting to a bus
 
 ```javascript
-var Bus = require('node-busmq');
+var Bus = require('busmq');
 var bus = Bus.create();
 bus.on('error', function(err) {
   // an error has occurred
