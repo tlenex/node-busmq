@@ -1,6 +1,6 @@
 {
   "name": "busmq",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A High performance, highly-available and scalable, message bus and message queueing system for node.js backed by Redis",
   "dependencies": {
     "redis": "0.12.1",
