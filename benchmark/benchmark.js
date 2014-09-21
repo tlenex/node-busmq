@@ -12,8 +12,6 @@ process.on('uncaughtException', function (err) {
   process.exit(1);
 });
 
-//var totalMessages = config.numWorkers * config.numQueues * config.numMessages;
-
 if (cluster.isMaster) {
   // Print summary
   console.log('');
@@ -21,9 +19,7 @@ if (cluster.isMaster) {
   console.log('------------------------');
   console.log(config.numWorkers + ' workers');
   console.log(config.numQueues + ' queues per worker');
-//  console.log(config.numMessages + ' messages per queue');
   console.log(config.messageLength + ' bytes per message');
-//  console.log(totalMessages + ' messages per cycle');
   console.log('------------------------');
   console.log('');
 
