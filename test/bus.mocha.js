@@ -507,6 +507,41 @@ describe('Bus', function() {
       bus.connect(redisUrls);
     });
 
+    it('should set and get arbitrary metadata', function(done) {
+      var key1 = 'key1';
+      var value1 = 'value1';
+      var key2 = 'key2';
+      var value2 = 'value2';
+      var bus = Bus.create();
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        var q = bus.queue(qName);
+        q.on('error', done);
+        q.on('detached', function() {
+          bus.disconnect();
+        });
+        q.on('attached', function() {
+          q.metadata(key1, value1, function() {
+            q.metadata(key2, value2, function() {
+              q.metadata(key1, function(val1) {
+                val1.should.be.exactly(value1);
+                q.metadata(key2, function(val2) {
+                  val2.should.be.exactly(value2);
+                  q.detach();
+                });
+              });
+            });
+          });
+        });
+        q.attach({ttl: 1});
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect(redisUrls);
+    });
+
     describe('channels', function() {
 
       it('server listens -> client connects', function(done) {

@@ -243,7 +243,7 @@ Create a new [Queue](#queue) instance.
 
 Returns a new Queue instance. Call `queue#attach` before using the queue.
 
-##### bus#channel(name, [local, remote])
+##### bus#channel(name [, local, remote])
 
 Create a new [Channel](#channel) instance.
 
@@ -319,6 +319,16 @@ Returns the number if messages in the queue.
 Returns the time in seconds for the queue to live without any attachments.
 
 * `callback` - receives the ttl in seconds
+
+##### queue#metadata(key [, value][, callback])
+
+Get or set arbitrary metadata on the queue.
+Will set the metadata `key` to the provided `value`, or get the current value of the key if the `value` parameter is not provided.
+
+* `key` - the metadata key to set or get
+* `value` - \[optional\] the value to set on the key.
+* `callback` - if setting a metadata value, it is called with no arguments upon success. if retrieving the value,
+ it be called with the retrieved value.
 
 ##### queue#pushed()
 
