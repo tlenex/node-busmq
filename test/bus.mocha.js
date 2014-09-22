@@ -469,6 +469,63 @@ describe('Bus', function() {
       });
     });
 
+    it('consume max', function(done) {
+      var testMessage = 'test message';
+      var consumed = 0;
+      var bus = Bus.create();
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('detached', function() {
+          bus.disconnect();
+        });
+        p.on('attached', function() {
+          p.push(testMessage);
+          p.push(testMessage);
+          p.push(testMessage);
+          p.push(testMessage);
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            ++consumed;
+          });
+          c.on('detached', function() {
+            p.detach();
+          });
+          c.on('consuming', function(status) {
+            if (consumed === 0 || consumed === 3) {
+              status.should.be.exactly(true);
+              c.isConsuming().should.be.exactly(true);
+            }
+            if (consumed === 2) {
+              status.should.be.exactly(false);
+              c.isConsuming().should.be.exactly(false);
+              consumed = 3;
+              c.consume(1);// consume only 1
+            }
+            if (consumed === 4) {
+              status.should.be.exactly(false);
+              c.isConsuming().should.be.exactly(false);
+              c.detach();
+            }
+          });
+          c.on('attached', function() {
+            c.consume(2); // consume only 2
+          });
+          c.attach();
+        });
+        p.attach({ttl: 100});
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect(redisUrls);
+    });
+
     it('flush messages', function(done) {
       var testMessage = 'test message';
       var bus = Bus.create();

@@ -281,10 +281,13 @@ is attached to again.
 Push a message to the queue. The message can be a JSON object or a string. 
 The message will remain in the queue until it is consumed by a consumer.
 
-##### queue#consume()
+##### queue#consume([max])
 
-Start consuming messages from the queue. 
+Start consuming messages from the queue.
 The `message` event is emitted whenever a message is consumed from the queue.
+
+* `max` if specified, only `max` messages will be consumed from the queue. If not specified,
+messages will be continuously consumed as they are pushed into the queue.
 
 ##### queue#isConsuming()
 
@@ -341,9 +344,12 @@ Returns the number of messages consumed by this client from the queue
 #### Queue Events
 
 * `attaching` - emitted when starting to attach
-* `attached` - emitted when attached to the queue. The listener callback receives `true` if the queue already existed and `false` if it was just created.
+* `attached` - emitted when attached to the queue. The listener callback receives `true` if the queue already exists
+and `false` if it was just created.
 * `detaching` - emitted when starting to detach
 * `detached` - emitted when detached from the queue. If no other clients are attached to the queue, the queue will remain alive for the `ttl` duration
+* `consuming` - emitted when starting or stopping to consume messages from the queue. The listener callback will receive `true`
+if starting to consume and `false` if stopping to consume.
 * `message` - emitted when a message is consumed from the queue. The listener callback receives the message as a string.
 * `error` - emitted when some error occurs. The listener callback receives the error.
 
