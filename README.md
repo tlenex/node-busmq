@@ -34,7 +34,7 @@ achieve the best performance.
 
 #### Connecting to a bus
 
-``javascript
+```javascript
 var Bus = require('busmq');
 var bus = Bus.create();
 bus.on('error', function(err) {
@@ -52,7 +52,7 @@ bus.connect('redis://192.168.0.1:6359');
 
 // or, connect to multiple redis instances
 bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
-``
+```
 
 ## Queue
 
@@ -77,7 +77,7 @@ after a predefined ttl (losing any messages in the queue).
 
 Producer:
 
-``javascript
+````javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -87,11 +87,11 @@ bus.on('online', function() {
   });
   q.attach();
 });
-``
+```
 
 Consumer:
 
-``javascript
+````javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -104,7 +104,7 @@ bus.on('online', function() {
   });
   q.attach();
 });
-``
+```
 
 ## Channel
 
@@ -123,7 +123,7 @@ It is also possible to specify other roles explicity, such as `client` and `serv
 
 Server endpoint:
 
-``javascript
+````javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -138,11 +138,11 @@ bus.on('online', function() {
   });
   c.listen(); // reverse the endpoint roles and connect to the channel
 });
-``
+```
 
 Client endpoint:
 
-``javascript
+````javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -157,13 +157,13 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-``
+```
 
 #### Using a channel (explicit roles)
 
 Server endpoint:
 
-``javascript
+````javascript
 bus.on('online', function() {
   // local role is server, remote role is client
   var c = bus.channel('zoo', 'server', 'client');
@@ -179,11 +179,11 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-``
+```
 
 Client endpoint:
 
-``javascript
+````javascript
 bus.on('online', function() {
   // notice the reverse order of roles
   // local role is client, remote role is server
@@ -200,17 +200,17 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-``
+```
 
 
-``javascript
+````javascript
 var q = bus.queue('myqueue');
 q.attach();
 
 // ... do some stuff ...
 
 q.detach();
-``
+```
 
 ## API
 
