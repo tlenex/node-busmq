@@ -505,7 +505,7 @@ describe('Bus', function() {
               status.should.be.exactly(false);
               c.isConsuming().should.be.exactly(false);
               consumed = 3;
-              c.consume(1);// consume only 1
+              c.consume({max: 1});// consume only 1
             }
             if (consumed === 4) {
               status.should.be.exactly(false);
@@ -514,7 +514,66 @@ describe('Bus', function() {
             }
           });
           c.on('attached', function() {
-            c.consume(2); // consume only 2
+            c.consume({max: 2}); // consume only 2
+          });
+          c.attach();
+        });
+        p.attach({ttl: 100});
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect(redisUrls);
+    });
+
+    it('consume without removing', function(done) {
+      var testMessage = 'test message';
+      var consumed = 0;
+      var bus = Bus.create();
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('detached', function() {
+          bus.disconnect();
+        });
+        p.on('attached', function() {
+          p.push(testMessage+0);
+          p.push(testMessage+1);
+          p.push(testMessage+2);
+          p.push(testMessage+3);
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('message', function(message) {
+            message.should.be.exactly(testMessage+consumed);
+            ++consumed;
+            if (consumed === 4) {
+              var c2 = bus.queue(qName);
+              c2.on('error', done);
+              c2.on('message', function(message) {
+                message.should.be.exactly(testMessage+consumed);
+                ++consumed;
+                if (consumed === 4) {
+                  c2.detach();
+                }
+              });
+              c2.on('detached', function() {
+                c.detach();
+              });
+              c2.on('attached', function() {
+                consumed = 0;
+                c2.consume();
+              });
+              c2.attach();
+            }
+          });
+          c.on('detached', function() {
+            p.detach();
+          });
+          c.on('attached', function() {
+            c.consume({remove: false}); // do not remove consumed messages
           });
           c.attach();
         });

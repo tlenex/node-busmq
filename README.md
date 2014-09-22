@@ -281,11 +281,14 @@ is attached to again.
 Push a message to the queue. The message can be a JSON object or a string. 
 The message will remain in the queue until it is consumed by a consumer.
 
-##### queue#consume([max])
+##### queue#consume([options])
 
 Start consuming messages from the queue.
 The `message` event is emitted whenever a message is consumed from the queue.
 
+Options:
+* `remove` - `true` indicates to remove a read message from the queue, and `false` leaves it in the queue so that it may be read once more. default is `true`.
+*Note*: Mixing consumers that remove messages with consumers that do not remove messages from the same queue results in undefined behavior.
 * `max` if specified, only `max` messages will be consumed from the queue. If not specified,
 messages will be continuously consumed as they are pushed into the queue.
 
@@ -366,7 +369,7 @@ The `connect` event is emitted once connected to the channel.
 
 ##### channel#send(message)
 
-Send a message to the peer
+Send a message to the peer. The peer does need to be connected for a message to be sent.
 
 ##### channel#sendTo(endpoint, message)
 
@@ -378,7 +381,7 @@ Disconnect from the channel. The channel remains open and a different peer can c
 
 ##### channel#end()
 
-End the channel. No more messages can be pushed or consumed. This also caused the peer to diconnect from the channel and close the message queues.
+End the channel. No more messages can be pushed or consumed. This also caused the peer to disconnect from the channel and close the message queues.
 
 ##### channel#isBound()
 
