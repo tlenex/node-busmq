@@ -77,7 +77,7 @@ after a predefined ttl (losing any messages in the queue).
 
 Producer:
 
-````javascript
+```javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -91,7 +91,7 @@ bus.on('online', function() {
 
 Consumer:
 
-````javascript
+```javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -123,7 +123,7 @@ It is also possible to specify other roles explicity, such as `client` and `serv
 
 Server endpoint:
 
-````javascript
+```javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -142,7 +142,7 @@ bus.on('online', function() {
 
 Client endpoint:
 
-````javascript
+```javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -163,7 +163,7 @@ bus.on('online', function() {
 
 Server endpoint:
 
-````javascript
+```javascript
 bus.on('online', function() {
   // local role is server, remote role is client
   var c = bus.channel('zoo', 'server', 'client');
@@ -183,7 +183,7 @@ bus.on('online', function() {
 
 Client endpoint:
 
-````javascript
+```javascript
 bus.on('online', function() {
   // notice the reverse order of roles
   // local role is client, remote role is server
@@ -200,16 +200,6 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-```
-
-
-````javascript
-var q = bus.queue('myqueue');
-q.attach();
-
-// ... do some stuff ...
-
-q.detach();
 ```
 
 ## API
