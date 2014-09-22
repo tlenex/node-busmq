@@ -129,7 +129,7 @@ describe('Bus', function() {
     })
   })
 
-  describe('producers and consumers', function() {
+  describe('queues', function() {
 
     it('should receive attach/detach events', function(done) {
       var count = 0;
@@ -174,7 +174,7 @@ describe('Bus', function() {
       bus.connect(redisUrls);
     });
 
-    describe('consuming messages', function() {
+    describe('pushing and consuming messages', function() {
 
       it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
         var testMessage = 'test message';
@@ -467,6 +467,44 @@ describe('Bus', function() {
         });
         bus.connect(redisUrls);
       });
+    });
+
+    it('flush messages', function(done) {
+      var testMessage = 'test message';
+      var bus = Bus.create();
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('detached', function() {
+          var q = bus.queue(qName);
+          q.on('error', done);
+          q.on('attached', function(exists) {
+            exists.should.be.exactly(true);
+            q.count(function(count) {
+              count.should.be.exactly(0);
+              q.detach();
+            });
+          });
+          q.on('detached', function() {
+            bus.disconnect();
+          });
+          q.attach();
+        });
+        p.on('attached', function() {
+          p.push(testMessage);
+          p.push(testMessage);
+          p.push(testMessage);
+          setImmediate(function() {p.detach();p.flush();});
+        });
+        p.attach({ttl: 1});
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect(redisUrls);
     });
 
     describe('channels', function() {

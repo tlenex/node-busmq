@@ -24,7 +24,7 @@ High availability is achieved by using standard redis high availability setups, 
 ## Bus
 
 The bus holds connections to one or more redis instances and is used
-to create ``queue``s and ``channel``s.
+to create `queue`s and `channel`s.
 
 Node processes connecting to the same bus have access to and can use all queues and channels.
 
@@ -34,7 +34,7 @@ achieve the best performance.
 
 #### Connecting to a bus
 
-```javascript
+``javascript
 var Bus = require('busmq');
 var bus = Bus.create();
 bus.on('error', function(err) {
@@ -52,7 +52,7 @@ bus.connect('redis://192.168.0.1:6359');
 
 // or, connect to multiple redis instances
 bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
-```
+``
 
 ## Queue
 
@@ -77,7 +77,7 @@ after a predefined ttl (losing any messages in the queue).
 
 Producer:
 
-```javascript
+``javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -87,11 +87,11 @@ bus.on('online', function() {
   });
   q.attach();
 });
-```
+``
 
 Consumer:
 
-```javascript
+``javascript
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -104,7 +104,7 @@ bus.on('online', function() {
   });
   q.attach();
 });
-```
+``
 
 ## Channel
 
@@ -123,7 +123,7 @@ It is also possible to specify other roles explicity, such as `client` and `serv
 
 Server endpoint:
 
-```javascript
+``javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -138,11 +138,11 @@ bus.on('online', function() {
   });
   c.listen(); // reverse the endpoint roles and connect to the channel
 });
-```
+``
 
 Client endpoint:
 
-```javascript
+``javascript
 bus.on('online', function() {
   var c = bus.channel('bar'); // use default names for the endpoints
   c.on('connected', function() {
@@ -157,13 +157,13 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-```
+``
 
 #### Using a channel (explicit roles)
 
 Server endpoint:
 
-```javascript
+``javascript
 bus.on('online', function() {
   // local role is server, remote role is client
   var c = bus.channel('zoo', 'server', 'client');
@@ -179,11 +179,11 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-```
+``
 
 Client endpoint:
 
-```javascript
+``javascript
 bus.on('online', function() {
   // notice the reverse order of roles
   // local role is client, remote role is server
@@ -200,17 +200,17 @@ bus.on('online', function() {
   });
   c.connect(); // connect to the channel
 });
-```
+``
 
 
-```javascript
+``javascript
 var q = bus.queue('myqueue');
 q.attach();
 
 // ... do some stuff ...
 
 q.detach();
-```
+``
 
 ## API
 
@@ -228,62 +228,62 @@ Attach a logger to the bus instance. Returns the bus instance.
 
 ##### bus#withRedis(redis)
 
-Use the provided ``node_redis`` client to create connections. Returns the bus instance.
+Use the provided `node_redis` client to create connections. Returns the bus instance.
 
 ##### bus#connect(redis)
 
-Connect to the specified redis urls. ``redis`` can be a string or an array of string urls. A valid url has the form ``redis://<host_or_ip>[:port]``.
+Connect to the specified redis urls. `redis` can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
 
-Once connected to all redis instances, the ``online`` will be emitted.
-If the bus gets disconnected from the the redis instances, the ``offline`` event will be emitted.
+Once connected to all redis instances, the `online` will be emitted.
+If the bus gets disconnected from the the redis instances, the `offline` event will be emitted.
 
 ##### bus#disconnect()
 
-Disconnect from the redis instances. Once disconnected, the ``offline`` event will be emitted.
+Disconnect from the redis instances. Once disconnected, the `offline` event will be emitted.
 
 ##### bus#isOnline()
 
-Return ``true`` if the bus is online, ``false`` if the bus offline.
+Return `true` if the bus is online, `false` if the bus offline.
 
 ##### bus#queue(name)
 
 Create a new [Queue](#queue) instance.
 
-* ``name`` - the name of the queue.
+* `name` - the name of the queue.
 
-Returns a new Queue instance. Call ``queue#attach`` before using the queue.
+Returns a new Queue instance. Call `queue#attach` before using the queue.
 
 ##### bus#channel(name, [local, remote])
 
 Create a new [Channel](#channel) instance.
 
-* ``name`` - the name of the channel.
-* ``local`` - \[optional\] specifies the local role. default is ``local``.
-* ``remote`` - \[optional\] specifies the remote role. default is ``remote``.
+* `name` - the name of the channel.
+* `local` - \[optional\] specifies the local role. default is `local`.
+* `remote` - \[optional\] specifies the remote role. default is `remote`.
 
 #### Bus Events
 
-* ``online`` - emitted when the bus has successfully connected to all of the specified redis instances
-* ``offline`` - emitted when the bus loses connections to the redis instances
-* ``error`` - an error occurs
+* `online` - emitted when the bus has successfully connected to all of the specified redis instances
+* `offline` - emitted when the bus loses connections to the redis instances
+* `error` - an error occurs
 
 ### Queue API
 
 ##### queue#attach([options])
 
 Attach to the queue. If the queue does not already exist it is created.
-Once attached, the ``attached`` event is emitted.
+Once attached, the `attached` event is emitted.
 
 After attaching, it is possible to push and consume messages.
 
 Options:
 
-* ``ttl`` - duration in seconds for the queue to live without any attachments. default is 30 seconds.
+* `ttl` - duration in seconds for the queue to live without any attachments. default is 30 seconds.
 
 ##### queue#detach()
 
 Detach from the queue. The queue will continue to live for as long as it has at least one attachment.
-Once a queue has no more attachments, it will continue to exist for the predefined ``ttl``, or until it
+Once a queue has no more attachments, it will continue to exist for the predefined `ttl`, or until it
 is attached to again.
 
 ##### queue#push(message)
@@ -294,7 +294,11 @@ The message will remain in the queue until it is consumed by a consumer.
 ##### queue#consume()
 
 Start consuming messages from the queue. 
-The ``message`` event is emitted whenever a message is consumed from the queue.
+The `message` event is emitted whenever a message is consumed from the queue.
+
+##### queue#isConsuming()
+
+Returns `true` if this client is consuming messages, `false` otherwise.
 
 ##### queue#stop()
 
@@ -302,16 +306,46 @@ Stop consuming messages from the queue.
 
 ##### queue#close()
 
-Closes the queue and destroys all messages. Emits the ``closed`` event once it is closed.
+Closes the queue and destroys all messages. Emits the `closed` event once it is closed.
+
+##### queue#flush()
+
+Empty the queue, removing all messages.
+
+##### queue#exists([callback])
+
+Checks if the queue already exists or not.
+
+* `callback` - receives `true` if the queue exists, `false` otherwise
+
+##### queue#count([callback])
+
+Returns the number if messages in the queue.
+
+* `callback` - receives the number of messages in the queue
+
+##### queue#ttl([callback])
+
+Returns the time in seconds for the queue to live without any attachments.
+
+* `callback` - receives the ttl in seconds
+
+##### queue#pushed()
+
+Returns the number of messages pushed by this client to the queue
+
+##### queue#consumed()
+
+Returns the number of messages consumed by this client from the queue
 
 #### Queue Events
 
-* ``attaching`` - emitted when starting to attach
-* ``attached`` - emitted when attached to the queue. The listener callback receives ``true`` if the queue already existed and ``false`` if it was just created.
-* ``detaching`` - emitted when starting to detach
-* ``detached`` - emitted when detached from the queue. If no other clients are attached to the queue, the queue will remain alive for the ``ttl`` duration
-* ``message`` - emitted when a message is consumed from the queue. The listener callback receives the message as a string.
-* ``error`` - emitted when some error occurs. The listener callback receives the error.
+* `attaching` - emitted when starting to attach
+* `attached` - emitted when attached to the queue. The listener callback receives `true` if the queue already existed and `false` if it was just created.
+* `detaching` - emitted when starting to detach
+* `detached` - emitted when detached from the queue. If no other clients are attached to the queue, the queue will remain alive for the `ttl` duration
+* `message` - emitted when a message is consumed from the queue. The listener callback receives the message as a string.
+* `error` - emitted when some error occurs. The listener callback receives the error.
 
 ### Channel API
 
