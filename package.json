@@ -1,6 +1,6 @@
 {
   "name": "busmq",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "A High performance, highly-available and scalable, message bus and message queueing system for node.js backed by Redis",
   "homepage": "http://github.com/capriza/node-busmq",
   "repository" : { "type" : "git" , "url" : "http://github.com/capriza/node-busmq.git" },
