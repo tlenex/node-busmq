@@ -3,12 +3,12 @@
 ##### Note: version 0.7 breaks API compatibility with 0.6.*
 
 A high performance, highly-available and scalable, message bus and message queueing system for node.js.
-Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
+Message queues are backed by [redis](http://redis.io/), a high performance, in-memory key/value store.
 
 ### Core Concepts
 
 * High-availability and scalability through the use of multiple redis instances
-* Federation capabilities over distributes data centers
+* Federation capabilities over distributed data centers
 * Event based message queues
 * Event based bi-directional channels for peer-to-peer communication (backed by message queues)
 * Delivers a message at most once
