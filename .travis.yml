@@ -10,3 +10,4 @@ before_install:
   - cd ..
   - npm install
 script: ./node_modules/mocha/bin/mocha test
+
