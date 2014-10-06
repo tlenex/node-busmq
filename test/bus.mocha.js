@@ -12,18 +12,22 @@ redisPorts.forEach(function(port) {
 var redises = [];
 
 function redisStart(port, done) {
+  console.log('<starting redis>');
   var redis = redisHelper.open(port);
   redises.push(redis);
   redis.on('error', function(err) {
     done(new Error(err));
   });
   redis.on('ready', function() {
+    console.log('<redis started>');
     done();
   });
 }
 
 function redisStop(redis, done) {
+  console.log('<closing redis>');
   redis.close(function() {
+    console.log('<redis closed>');
     redises.splice(redises.indexOf(redis), 1);
     done();
   });
@@ -102,7 +106,6 @@ describe('Bus', function() {
     });
 
     it('should emit offline when redis goes down, and online when it\'s back again', function(done) {
-      this.timeout(5000);
       var bus = Bus.create({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
