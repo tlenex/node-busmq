@@ -27,5 +27,8 @@
   ],
   "licenses": [{
       "type": "MIT"
-    }]
+    }],
+  "scripts": {
+    "test": "mocha test"
+  }
 }

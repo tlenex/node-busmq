@@ -105,7 +105,7 @@ RedisHelper.prototype.close = function(callback) {
     });
   }
 
-  this.process.kill('SIGTERM');
+  this.process.kill();
 
   return true;
 };

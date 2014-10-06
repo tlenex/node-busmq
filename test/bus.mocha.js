@@ -102,6 +102,7 @@ describe('Bus', function() {
     });
 
     it('should emit offline when redis goes down, and online when it\'s back again', function(done) {
+      this.timeout(5000);
       var bus = Bus.create({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
