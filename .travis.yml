@@ -1,0 +1,10 @@
+language: node_js
+node_js:
+  - "0.10"
+before_install:
+  - wget http://download.redis.io/releases/redis-2.8.17.tar.gz
+  - tar xzf redis-2.8.17.tar.gz
+  - cd redis-2.8.17
+  - make
+  - sudo make install
+script: ./node_modules/mocha/bin/mocha test
