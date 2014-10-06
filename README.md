@@ -1,22 +1,23 @@
 # node-busmq
 
-A High performance, highly-available and scalable, message bus and message queueing system for node.js.
+##### Note: version 0.7 breaks API compatibility with 0.6.*
+
+A high performance, highly-available and scalable, message bus and message queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
 ### Core Concepts
 
 * High-availability and scalability through the use of multiple redis instances
+* Federation capabilities over distributes data centers
 * Event based message queues
-* event based bi-directional channels for peer-to-peer communication (backed by message queues)
+* Event based bi-directional channels for peer-to-peer communication (backed by message queues)
 * Delivers a message at most once
-* Queues are automatically expired after a pre-defined idle time
+* Auto expiration of queues after a pre-defined idle time
 
 ### High Availability and Scaling
 
-Connecting the bus to multiple redis instances provides high-availability and scaling.
-
-Scaling is achieved by spreading queues and channels between all redis instances. The redis instance
-is selected by performing a calculation on the queue/channel name.
+Scaling is achieved by spreading queues and channels between multiple redis instances.
+The redis instance is selected by performing a calculation on the queue/channel name.
 
 High availability is achieved by using standard redis high availability setups, such as
 [Redis Sentinal](http://redis.io/topics/sentinel)
@@ -36,7 +37,7 @@ achieve the best performance.
 
 ```javascript
 var Bus = require('busmq');
-var bus = Bus.create();
+var bus = Bus.create({redis: ['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
 bus.on('error', function(err) {
   // an error has occurred
 });
@@ -47,11 +48,8 @@ bus.on('offline', function() {
   // the bus is offline - redis is down...
 });
 
-// connect to a single redis instance
-bus.connect('redis://192.168.0.1:6359');
-
 // or, connect to multiple redis instances
-bus.connect(['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
+bus.connect();
 ```
 
 ## Queue
@@ -201,6 +199,76 @@ bus.on('online', function() {
   c.connect(); // connect to the channel
 });
 ```
+## Federation
+
+It is sometimes desirable to setup bus instances in different locations, where redis
+servers of one location are not directly accessible to other locations. This setup is very common
+when building a bus that spans several data centers, where each data center is isolated behind a firewall.
+
+Federation enables using queues and channels of a bus without access to the redis servers themselves.
+When federating a queue or channel, the federating bus opens a federation channel over web sockets to the target bus,
+and the target bus manages the queue/channel on its redis servers.
+The federating bus does not host the federated objects on the local redis servers.
+
+Federation is done over web sockets since they are firewall and proxy friendly.
+
+The API and events of a federated queue/channel are exactly the same as a non-federated queue/channel. This is achieved
+using the awesome [dnode](https://github.com/substack/dnode) module for rpc-ing the entire object API.
+
+#### Opening a bus with a federation server
+
+```javascript
+// create the http server to serve as the federation server.
+var http = require('http');
+var httpServer = http.createServer();
+// you can also use express if you like...
+
+var Bus = require('busmq');
+var options = {
+  redis: 'http://127.0.0.1', // connect this bus to a local running redis
+  federate: {
+    server: httpServer, // use the provided http server as the federation server
+    port: 8881          // the federation server will listen on this port
+  }
+};
+var bus = Bus.create(options);
+bus.on('online', function() {
+  // the bus is now ready to receive federation requests
+});
+bus.connect();
+```
+
+#### Federating a queue
+
+```javascript
+bus.on('online', function() {
+ // federate the queue to a bus located at a different data center
+ var fed = bus.federate(bus.queue('foo'), 'http://my.other.bus');
+ fed.on('ready', function(q) {
+   // federation is ready - we can start using the queue
+   q.on('attached', function() {
+     // do whatever
+   });
+   q.attach();
+ });
+});
+```
+
+#### Federating a channel
+
+```javascript
+bus.on('online', function() {
+ // federate the channel to a bus located at a different data center
+ var fed = bus.federate(bus.channel('bar'), 'http://my.other.bus');
+ fed.on('ready', function(c) {
+   // federation is ready - we can start using the channel
+   c.on('message', function(message) {
+     // do whatever
+   });
+   c.attach();
+ });
+});
+```
 
 ## API
 
@@ -208,9 +276,17 @@ Enough with examples. Let's see the API.
 
 ### Bus API
 
-##### bus#create()
+##### bus#create([options])
 
-Create a new bus instance.
+Create a new bus instance. Options:
+
+* `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
+* `federate` - an object defining federation options:
+  * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open. Do not perform listen - the bus will do it for you.
+  * `port` - the port that the server should listen on
+  * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
+
+Call `bus#connect` to connect to the redis instances and to open the federation server.
 
 ##### bus#withLog(log)
 
@@ -220,16 +296,14 @@ Attach a logger to the bus instance. Returns the bus instance.
 
 Use the provided `node_redis` client to create connections. Returns the bus instance.
 
-##### bus#connect(redis)
+##### bus#connect()
 
-Connect to the specified redis urls. `redis` can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
-
-Once connected to all redis instances, the `online` will be emitted.
+Connect to the redis servers and start the federation server (if one was specified). Once connected to all redis instances, the `online` will be emitted.
 If the bus gets disconnected from the the redis instances, the `offline` event will be emitted.
 
 ##### bus#disconnect()
 
-Disconnect from the redis instances. Once disconnected, the `offline` event will be emitted.
+Disconnect from the redis instances and stops the federation server. Once disconnected, the `offline` event will be emitted.
 
 ##### bus#isOnline()
 
@@ -250,6 +324,21 @@ Create a new [Channel](#channel) instance.
 * `name` - the name of the channel.
 * `local` - \[optional\] specifies the local role. default is `local`.
 * `remote` - \[optional\] specifies the remote role. default is `remote`.
+
+##### bus#federate(object, target)
+
+Federate `object` to the specified `target` instead of hosting the object on the local redis servers.
+Do not use any of the object API's before federation setup is complete.
+
+* `object` - `queue` or `channel` objects to federate. These are created normally through `bus#queue` or `bus#channel`.
+* `target` - the target bus url. the url has the form `http[s]://<location>[:<port>]`
+
+Returns a federation object. The following events are emitted on the federation object:
+
+* `ready` - emitted when the federation setup is ready. The callback receives the bus object to use.
+* `unauthorized` - incorrect secret key was used to authenticate with the federation server
+* `closed` - the federation connection closed. the callback receives the `code` and `message`
+* `error` - some error occurred. the callback receives the `error` message
 
 #### Bus Events
 
@@ -292,7 +381,7 @@ Options:
 * `max` if specified, only `max` messages will be consumed from the queue. If not specified,
 messages will be continuously consumed as they are pushed into the queue.
 
-##### queue#isConsuming()
+##### queue#isConsuming([callback])
 
 Returns `true` if this client is consuming messages, `false` otherwise.
 
@@ -336,11 +425,11 @@ Will set the metadata `key` to the provided `value`, or get the current value of
 * `callback` - if setting a metadata value, it is called with no arguments upon success. if retrieving the value,
  it be called with the retrieved value.
 
-##### queue#pushed()
+##### queue#pushed([callback])
 
 Returns the number of messages pushed by this client to the queue
 
-##### queue#consumed()
+##### queue#consumed([callback])
 
 Returns the number of messages consumed by this client from the queue
 
@@ -362,6 +451,10 @@ if starting to consume and `false` if stopping to consume.
 
 Connects to the channel. The `connect` event is emitted once connected to the channel.
 
+##### channel#attach()
+
+Alias to `channel#connect()`
+
 ##### channel#listen()
 
 Connects to the channel with reverse semantics of the roles. 
@@ -379,11 +472,15 @@ Send a message to the the specified endpoint. There is no need to connect to the
 
 Disconnect from the channel. The channel remains open and a different peer can connect to it.
 
+##### channel#detach()
+
+Alias to `channel#disconnect()`
+
 ##### channel#end()
 
 End the channel. No more messages can be pushed or consumed. This also caused the peer to disconnect from the channel and close the message queues.
 
-##### channel#isBound()
+##### channel#isAttached([callback])
 
 Returns `true` if connected to the channel, `false` if not connected.
 
@@ -396,6 +493,13 @@ Returns `true` if connected to the channel, `false` if not connected.
 * `message` - emitted when a message is received from the channel. The listener callback receives the message as a string.
 * `end` - emitted when the remote peer ends the channel
 * `error` - emitted when an error occurs. The listener callback receives the error.
+
+## Tests
+
+Redis server must be installed to run the tests, but does not need to be running.
+Download redis from http://redis.io.
+
+To run the tests: `./node_modules/mocha/bin/mocha test`
 
 ## License
 

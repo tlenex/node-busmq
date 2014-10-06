@@ -1,3 +1,4 @@
+var http = require('http');
 var Should = require('should');
 var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
@@ -61,7 +62,7 @@ describe('Bus', function() {
   describe('bus connection', function() {
 
     it('should emit online event when connected and offline event after disconnecting', function(done) {
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
@@ -71,11 +72,11 @@ describe('Bus', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     it('should emit error if calling connect twice', function(done) {
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       var dones = 0;
       var onlines = 0;
       bus.on('error', function(err) {
@@ -97,11 +98,11 @@ describe('Bus', function() {
           done('offline should not have been called twice');
         }
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     it('should emit offline when redis goes down, and online when it\'s back again', function(done) {
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
       bus.on('error', function(){});
@@ -125,9 +126,9 @@ describe('Bus', function() {
           done('too many offline events');
         }
       });
-      bus.connect(redisUrls);
+      bus.connect();
     })
-  })
+  });
 
   describe('queues', function() {
 
@@ -136,7 +137,7 @@ describe('Bus', function() {
       function _count() {
         ++count;
       }
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -171,7 +172,7 @@ describe('Bus', function() {
         count.should.be.exactly(8);
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     describe('pushing and consuming messages', function() {
@@ -179,7 +180,7 @@ describe('Bus', function() {
       it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -214,13 +215,13 @@ describe('Bus', function() {
           consumed.should.be.exactly(1);
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('producer attach -> consumer attach -> producer push -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -253,13 +254,13 @@ describe('Bus', function() {
           consumed.should.be.exactly(1);
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('consumer attach -> producer attach -> producer push -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -295,13 +296,13 @@ describe('Bus', function() {
           consumed.should.be.exactly(1);
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('producer attach -> producer push(5) -> consumer attach -> consumer receive(5)', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -339,13 +340,13 @@ describe('Bus', function() {
           consumed.should.be.exactly(5);
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('producer push(5) -> producer attach -> consumer attach -> consumer receive(5)', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -384,12 +385,12 @@ describe('Bus', function() {
           consumed.should.be.exactly(5);
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
         var testMessage = 'test message';
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -423,12 +424,12 @@ describe('Bus', function() {
         bus.on('offline', function() {
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
 
       it('queue should expire: producer attach -> consumer attach -> producer push -> detach all', function(done) {
         var testMessage = 'test message';
-        var bus = Bus.create();
+        var bus = Bus.create({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -465,14 +466,14 @@ describe('Bus', function() {
         bus.on('offline', function() {
           done();
         });
-        bus.connect(redisUrls);
+        bus.connect();
       });
     });
 
     it('consume max', function(done) {
       var testMessage = 'test message';
       var consumed = 0;
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -523,13 +524,13 @@ describe('Bus', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     it('consume without removing', function(done) {
       var testMessage = 'test message';
       var consumed = 0;
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -582,12 +583,12 @@ describe('Bus', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     it('flush messages', function(done) {
       var testMessage = 'test message';
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -620,7 +621,7 @@ describe('Bus', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
     it('should set and get arbitrary metadata', function(done) {
@@ -628,7 +629,7 @@ describe('Bus', function() {
       var value1 = 'value1';
       var key2 = 'key2';
       var value2 = 'value2';
-      var bus = Bus.create();
+      var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -655,154 +656,310 @@ describe('Bus', function() {
       bus.on('offline', function() {
         done();
       });
-      bus.connect(redisUrls);
+      bus.connect();
     });
 
-    describe('channels', function() {
+  });
 
-      it('server listens -> client connects', function(done) {
-        var testMessage = 'test message';
-        var sEvents = {'message': 0};
-        var cEvents = {'message': 0};
-        var bus = Bus.create();
-        bus.on('error', done);
-        bus.on('online', function() {
-          var cName = 'test'+Math.random();
-          var cServer = bus.channel(cName);
-          var cClient = bus.channel(cName);
-          cServer.on('error', function(error) {
-            sEvents['error'] = error;
-            bus.disconnect();
-          });
-          cServer.on('connect', function() {
-            sEvents['connect'] = true;
-            cClient.on('error', function(error) {
-              cEvents['error'] = error;
-              bus.disconnect();
-            });
-            cClient.on('connect', function() {
-              cEvents['connect'] = true;
-            });
-            cClient.on('remote:connect', function() {
-              cEvents['remote:connect'] = true;
-              cClient.send(testMessage);
-            });
-            cClient.on('message', function(message) {
-              message.should.be.exactly(testMessage);
-              if (++cEvents['message'] < 5) {
-                cClient.send(testMessage);
-              } else {
-                cClient.end();
-              }
-            });
-            cClient.on('end', function() {
-              cEvents['end'] = true;
-            });
-            cClient.connect();
-          });
-          cServer.on('remote:connect', function() {
-            sEvents['remote:connect'] = true;
-          });
-          cServer.on('message', function(message) {
-            message.should.be.exactly(testMessage);
-            ++sEvents['message'];
-            cServer.send(testMessage);
-          });
-          cServer.on('end', function() {
-            sEvents['end'] = true;
-            bus.disconnect();
-          });
-          cServer.listen();
+  describe('channels', function() {
+
+    it('server listens -> client connects', function(done) {
+      var testMessage = 'test message';
+      var sEvents = {'message': 0};
+      var cEvents = {'message': 0};
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var cName = 'test'+Math.random();
+        var cServer = bus.channel(cName);
+        var cClient = bus.channel(cName);
+        cServer.on('error', function(error) {
+          sEvents['error'] = error;
+          bus.disconnect();
         });
-        bus.on('offline', function() {
-          Should(sEvents['connect']).equal(true);
-          Should(sEvents['remote:connect']).equal(true);
-          Should(sEvents['message']).equal(5);
-          Should(sEvents['end']).equal(true);
-          Should(sEvents['error']).equal(undefined);
-
-          Should(cEvents['connect']).equal(true);
-          Should(cEvents['remote:connect']).equal(true);
-          Should(cEvents['message']).equal(5);
-          Should(cEvents['end']).equal(undefined);
-          Should(cEvents['error']).equal(undefined);
-
-          done();
-        });
-        bus.connect(redisUrls);
-      });
-
-      it('client connects -> server listens', function(done) {
-        var testMessage = 'test message';
-        var sEvents = {'message': 0};
-        var cEvents = {'message': 0};
-        var bus = Bus.create();
-        bus.on('error', done);
-        bus.on('online', function() {
-          var cName = 'test'+Math.random();
-          var cServer = bus.channel(cName);
-          var cClient = bus.channel(cName);
+        cServer.on('connect', function() {
+          sEvents['connect'] = true;
           cClient.on('error', function(error) {
             cEvents['error'] = error;
             bus.disconnect();
           });
           cClient.on('connect', function() {
             cEvents['connect'] = true;
-            cServer.on('error', function(error) {
-              sEvents['error'] = error;
-              bus.disconnect();
-            });
-            cServer.on('connect', function() {
-              sEvents['connect'] = true;
-            });
-            cServer.on('remote:connect', function() {
-              sEvents['remote:connect'] = true;
-              cServer.send(testMessage);
-            });
-            cServer.on('message', function(message) {
-              message.should.be.exactly(testMessage);
-              if (++sEvents['message'] < 5) {
-                cServer.send(testMessage);
-              } else {
-                cServer.end();
-              }
-            });
-            cServer.on('end', function() {
-              sEvents['end'] = true;
-            });
-            cServer.listen();
           });
           cClient.on('remote:connect', function() {
             cEvents['remote:connect'] = true;
+            cClient.send(testMessage);
           });
           cClient.on('message', function(message) {
             message.should.be.exactly(testMessage);
-            ++cEvents['message'];
-            cClient.send(testMessage);
+            if (++cEvents['message'] < 5) {
+              cClient.send(testMessage);
+            } else {
+              cClient.end();
+            }
           });
           cClient.on('end', function() {
             cEvents['end'] = true;
-            bus.disconnect();
           });
           cClient.connect();
         });
-        bus.on('offline', function() {
-          Should(sEvents['connect']).equal(true);
-          Should(sEvents['remote:connect']).equal(true);
-          Should(sEvents['message']).equal(5);
-          Should(sEvents['end']).equal(undefined);
-          Should(sEvents['error']).equal(undefined);
-
-          Should(cEvents['connect']).equal(true);
-          Should(cEvents['remote:connect']).equal(true);
-          Should(cEvents['message']).equal(5);
-          Should(cEvents['end']).equal(true);
-          Should(cEvents['error']).equal(undefined);
-
-          done();
+        cServer.on('remote:connect', function() {
+          sEvents['remote:connect'] = true;
         });
-        bus.connect(redisUrls);
+        cServer.on('message', function(message) {
+          message.should.be.exactly(testMessage);
+          ++sEvents['message'];
+          cServer.send(testMessage);
+        });
+        cServer.on('end', function() {
+          sEvents['end'] = true;
+          bus.disconnect();
+        });
+        cServer.listen();
       });
+      bus.on('offline', function() {
+        Should(sEvents['connect']).equal(true);
+        Should(sEvents['remote:connect']).equal(true);
+        Should(sEvents['message']).equal(5);
+        Should(sEvents['end']).equal(true);
+        Should(sEvents['error']).equal(undefined);
+
+        Should(cEvents['connect']).equal(true);
+        Should(cEvents['remote:connect']).equal(true);
+        Should(cEvents['message']).equal(5);
+        Should(cEvents['end']).equal(undefined);
+        Should(cEvents['error']).equal(undefined);
+
+        done();
+      });
+      bus.connect();
+    });
+
+    it('client connects -> server listens', function(done) {
+      var testMessage = 'test message';
+      var sEvents = {'message': 0};
+      var cEvents = {'message': 0};
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var cName = 'test'+Math.random();
+        var cServer = bus.channel(cName);
+        var cClient = bus.channel(cName);
+        cClient.on('error', function(error) {
+          cEvents['error'] = error;
+          bus.disconnect();
+        });
+        cClient.on('connect', function() {
+          cEvents['connect'] = true;
+          cServer.on('error', function(error) {
+            sEvents['error'] = error;
+            bus.disconnect();
+          });
+          cServer.on('connect', function() {
+            sEvents['connect'] = true;
+          });
+          cServer.on('remote:connect', function() {
+            sEvents['remote:connect'] = true;
+            cServer.send(testMessage);
+          });
+          cServer.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            if (++sEvents['message'] < 5) {
+              cServer.send(testMessage);
+            } else {
+              cServer.end();
+            }
+          });
+          cServer.on('end', function() {
+            sEvents['end'] = true;
+          });
+          cServer.listen();
+        });
+        cClient.on('remote:connect', function() {
+          cEvents['remote:connect'] = true;
+        });
+        cClient.on('message', function(message) {
+          message.should.be.exactly(testMessage);
+          ++cEvents['message'];
+          cClient.send(testMessage);
+        });
+        cClient.on('end', function() {
+          cEvents['end'] = true;
+          bus.disconnect();
+        });
+        cClient.connect();
+      });
+      bus.on('offline', function() {
+        Should(sEvents['connect']).equal(true);
+        Should(sEvents['remote:connect']).equal(true);
+        Should(sEvents['message']).equal(5);
+        Should(sEvents['end']).equal(undefined);
+        Should(sEvents['error']).equal(undefined);
+
+        Should(cEvents['connect']).equal(true);
+        Should(cEvents['remote:connect']).equal(true);
+        Should(cEvents['message']).equal(5);
+        Should(cEvents['end']).equal(true);
+        Should(cEvents['error']).equal(undefined);
+
+        done();
+      });
+      bus.connect();
+    });
+  });
+
+  describe('federation', function() {
+
+    it('federates queue events', function(done) {
+      var fedserver = http.createServer();
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var msgs = [];
+          var name = 'q'+Date.now();
+          var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            done('unauthorized')
+          });
+          f.on('ready', function(q) {
+            q.on('error', done);
+            q.on('attached', function() {
+              q.consume();
+            });
+            q.on('consuming', function(state) {
+              if (state) {
+                q.push('hello');
+                q.push('world');
+              } else {
+                q.detach();
+              }
+            });
+            q.on('message', function(msg) {
+              msgs.push(msg);
+              if (msgs.length === 2) {
+                q.stop();
+              }
+            });
+            q.on('detached', function() {
+              msgs.length.should.be.exactly(2);
+              msgs[0].should.be.exactly('hello');
+              msgs[1].should.be.exactly('world');
+              busFed.disconnect();
+            });
+            q.attach();
+          });
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('federates channel events', function(done) {
+      var fedserver = http.createServer();
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var name = 'q'+Date.now();
+          var f = busFed.federate(busFed.channel(name, 'local', 'remote'), 'http://127.0.0.1:9777');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            done('unauthorized')
+          });
+          f.on('ready', function(c) {
+            c.on('error', done);
+            c.on('remote:connect', function() {
+              c.send('hello');
+            });
+            c.on('message', function(message) {
+              message.should.be.exactly('world');
+              c.disconnect();
+              busFed.disconnect();
+            });
+            c.connect();
+          });
+
+          var c2 = busFed.channel(name, 'remote', 'local');
+          c2.on('error', done);
+          c2.on('remote:connect', function() {
+          });
+          c2.on('message', function(message) {
+            message.should.be.exactly('hello');
+            c2.send('world');
+          });
+          c2.on('remote:disconnect', function() {
+            c2.disconnect();
+          });
+          c2.connect();
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('does not allow federation with wrong secret', function(done) {
+      var fedserver = http.createServer();
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777, secret: 'thisisit'}, logger: console});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, federate: {secret: 'thisisNOTit'}, logger: console});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var name = 'q'+Date.now();
+          var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            busFed.disconnect();
+          });
+          f.on('ready', function() {
+            done('ready should not have been called')
+          });
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
     });
   });
 });
