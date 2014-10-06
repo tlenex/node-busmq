@@ -30,7 +30,7 @@ RedisHelper.prototype.open = function() {
 
   var self = this;
 
-  this.process = childProcess.exec('redis-server --port ' + this.config.port);
+  this.process = childProcess.spawn('redis-server', ['--port', this.config.port]);
   this.isOpening = true;
 
   function parse(value) {
