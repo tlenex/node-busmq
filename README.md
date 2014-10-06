@@ -1,5 +1,7 @@
 # node-busmq
 
+![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)
+
 ##### Note: version 0.7 breaks API compatibility with 0.6.*
 
 A high performance, highly-available and scalable, message bus and message queueing system for node.js.
