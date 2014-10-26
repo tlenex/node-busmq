@@ -1,6 +1,6 @@
 {
   "name": "busmq",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "A high performance, highly-available and scalable, message bus and message queueing system for node.js backed by redis",
   "author": "Capriza Inc. <backend@capriza.com>",
   "maintainers": [
