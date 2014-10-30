@@ -369,10 +369,7 @@ describe('Bus', function() {
             c.on('detached', function() {
               bus.disconnect();
             });
-            c.on('attached', function() {
-              // wait for messages
-              c.consume();
-            });
+            c.consume();
             c.attach();
           });
           p.on('attached', function() {

@@ -66,8 +66,7 @@ can consume messages from a queue. A message is consumed by one consumer at most
 
 #### Attach and detach
 
-To push and consume messages, first attach to the queue.
-Once attached, it is possible to push messages and start consuming messages from the queue.
+Pushing messages and consuming them requires attaching to the queue.
 The queue will remain in existence for as long as it has at least one attachment.
 
 To stop using a queue, detach from it. Once a queue has no more attachments, it will automatically expire
@@ -81,11 +80,11 @@ Producer:
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
-    q.push({hello: 'world'});
-    q.push('my name if foo');
-    q.detach();
+    console.log('attached to queue');
   });
   q.attach();
+  q.push({hello: 'world'});
+  q.push('my name if foo');
 });
 ```
 
@@ -95,7 +94,7 @@ Consumer:
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
-    q.consume();
+    console.log('attached to queue. messages will soon start flowing in...');
   });
   q.on('message', function(message) {
     if (message === 'my name if foo') {
@@ -103,6 +102,7 @@ bus.on('online', function() {
     }
   });
   q.attach();
+  q.consume();
 });
 ```
 
@@ -354,8 +354,6 @@ Returns a federation object. The following events are emitted on the federation 
 
 Attach to the queue. If the queue does not already exist it is created.
 Once attached, the `attached` event is emitted.
-
-After attaching, it is possible to push and consume messages.
 
 Options:
 
