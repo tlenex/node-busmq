@@ -212,7 +212,7 @@ persisted to the bus. Loading a persistent object reads all of the latest persis
 ```javascript
 bus.on('online', function() {
   var object = {field: 'this field is not persisted'};
-  var p = bus.peristify('obj', object, ['foo', 'bar', zoo']);
+  var p = bus.peristify('obj', object, ['foo', 'bar', 'zoo']);
   p.foo = 'hello';
   p.bar = 1;
   p.zoo = true;
@@ -226,7 +226,7 @@ bus.on('online', function() {
   });
 
   // load the persistified properties
-  var p2 = bus.peristify('obj', {}, ['foo', 'bar', zoo']);
+  var p2 = bus.peristify('obj', {}, ['foo', 'bar', 'zoo']);
   p2.load(function(err, exists) {
     // exists == true
     // p2.foo == 'world'
@@ -312,7 +312,7 @@ bus.on('online', function() {
 ```javascript
 bus.on('online', function() {
  // federate the channel to a bus located at a different data center
- var fed = bus.federate(bus.persistify('bar', object, ['field1', field2']), 'http://my.other.bus');
+ var fed = bus.federate(bus.persistify('bar', object, ['field1', 'field2']), 'http://my.other.bus');
  fed.on('ready', function(p) {
    // federation is ready - we can start using the persisted object
    p.load(function(err, exists) {
@@ -377,12 +377,29 @@ Create a new [Channel](#channel) instance.
 * `local` - \[optional\] specifies the local role. default is `local`.
 * `remote` - \[optional\] specifies the remote role. default is `remote`.
 
+##### bus#persistify(name, object, attributes)
+
+Create a new persisted object.
+
+* `name` - the name of the persisted object.
+* `object` - the object to persistify.
+* `attributes` - an array of attribute names to persist.
+
+Persistifying an object adds the following methods to the object:
+
+* `save(cb)` - save all the dirty properties. The dirty properties are marked as not dirty after the save completes. `cb` has the form `function(err)`.
+* `load(cb)` - load all the tracked properties. All properties are marked as not dirty after the load completes.
+              `cb` has the form `function(err, exists)` where `exists` is true if the persisted object was found in the bus.
+* `persist(ttl)` - start a periodic timer to continuously mark the persisted object as being used.
+                  `ttl` specifies the number of seconds to keep the object alive in the bus.
+* `unpersist()` - stop the periodic timer. This will cause object to expire after the defined ttl provided in the persist method.
+
 ##### bus#federate(object, target)
 
 Federate `object` to the specified `target` instead of hosting the object on the local redis servers.
 Do not use any of the object API's before federation setup is complete.
 
-* `object` - `queue` or `channel` objects to federate. These are created normally through `bus#queue` or `bus#channel`.
+* `object` - `queue`, `channel` or `persistified` objects to federate. These are created normally through `bus#queue`, `bus#channel` and `bus#persistify`.
 * `target` - the target bus url. the url has the form `http[s]://<location>[:<port>]`
 
 Returns a federation object. The following events are emitted on the federation object:
