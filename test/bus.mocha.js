@@ -809,6 +809,40 @@ describe('Bus', function() {
     });
   });
 
+  describe('persistency', function() {
+
+    it('saves and loads an object', function(done) {
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var object = bus.persistify('data1', {}, ['field1', 'field2', 'field3']);
+        object.field1 = 'val1';
+        object.field2 = 2;
+        object.field3 = true;
+        object.save(function(err) {
+          Should(err).equal(undefined);
+          object.field1 = 'val2';
+          object.save(function(err) {
+            Should(err).equal(undefined);
+            var object2 = bus.persistify('data1', {}, ['field1', 'field2', 'field3']);
+            object2.load(function(err, exists) {
+              Should(err).equal(null);
+              exists.should.be.exactly(true);
+              Should(object2.field1).equal('val2');
+              Should(object2.field2).equal(2);
+              Should(object2.field3).equal(true);
+              bus.disconnect();
+            })
+          });
+        });
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+  });
+
   describe('federation', function() {
 
     it('federates queue events', function(done) {
@@ -915,6 +949,64 @@ describe('Bus', function() {
             c2.disconnect();
           });
           c2.connect();
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('federates persisted objects', function(done) {
+      var fedserver = http.createServer();
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var f = busFed.federate(busFed.persistify('p1', {}, ['f1', 'f2', 'f3']), 'http://127.0.0.1:9777');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            done('unauthorized')
+          });
+          f.on('ready', function(p) {
+            p.f1 = 'v1';
+            p.f2 = 2;
+            p.f3 = true;
+            p.save(function(err) {
+              Should(err).equal(undefined);
+              p.f1 = 'v2';
+              p.save(function(err) {
+                Should(err).equal(undefined);
+                var f2 = busFed.federate(busFed.persistify('p1', {}, ['f1', 'f2', 'f3']), 'http://127.0.0.1:9777');
+                f2.on('error', done);
+                f2.on('unauthorized', function() {
+                  done('unauthorized')
+                });
+                f2.on('ready', function(p) {
+                  p.load(function(err, exist) {
+                    Should(err).equal(null);
+                    Should(exist).equal(true);
+                    Should(p.f1).equal('v2');
+                    Should(p.f2).equal(2);
+                    Should(p.f3).equal(true);
+                  });
+                });
+              });
+              busFed.disconnect();
+            });
+          });
         });
         busFed.on('offline', function() {
           bus.disconnect();

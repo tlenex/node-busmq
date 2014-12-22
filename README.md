@@ -201,6 +201,41 @@ bus.on('online', function() {
   c.connect(); // connect to the channel
 });
 ```
+
+## Persistency
+
+It is possible to persist arbitrary objects to the bus.
+Persistifying an object defines a set of properties on the object that are tracked for modification. When
+saving a dirty object (where dirty means that some tracked properties have changed) only those dirty properties are
+persisted to the bus. Loading a persistent object reads all of the latest persisted properties.
+
+```javascript
+bus.on('online', function() {
+  var object = {field: 'this field is not persisted'};
+  var p = bus.peristify('obj', object, ['foo', 'bar', zoo']);
+  p.foo = 'hello';
+  p.bar = 1;
+  p.zoo = true;
+  p.save(function(err) {
+    // foo, bar and zoo fields have been saved
+  });
+
+  p.foo = 'world';
+  p.save(function(err) {
+    // only foo has been saved
+  });
+
+  // load the persistified properties
+  var p2 = bus.peristify('obj', {}, ['foo', 'bar', zoo']);
+  p2.load(function(err, exists) {
+    // exists == true
+    // p2.foo == 'world'
+    // p2.bar == 2
+    // p2.zpp == true'
+  });
+});
+```
+
 ## Federation
 
 It is sometimes desirable to setup bus instances in different locations, where redis
@@ -268,6 +303,21 @@ bus.on('online', function() {
      // do whatever
    });
    c.attach();
+ });
+});
+```
+
+#### Federating a persistified object
+
+```javascript
+bus.on('online', function() {
+ // federate the channel to a bus located at a different data center
+ var fed = bus.federate(bus.persistify('bar', object, ['field1', field2']), 'http://my.other.bus');
+ fed.on('ready', function(p) {
+   // federation is ready - we can start using the persisted object
+   p.load(function(err, exists) {
+     // do whatever
+   });
  });
 });
 ```
