@@ -202,12 +202,12 @@ bus.on('online', function() {
 });
 ```
 
-## Persistency
+## Persistable
 
 It is possible to persist arbitrary objects to the bus.
-Persistifying an object defines a set of properties on the object that are tracked for modification. When
+A persistable object defines a set of properties on the object that are tracked for modification. When
 saving a dirty object (where dirty means that some tracked properties have changed) only those dirty properties are
-persisted to the bus. Loading a persistent object reads all of the latest persisted properties.
+persisted to the bus. Loading a persistable object reads all of the latest persisted properties.
 
 ```javascript
 bus.on('online', function() {
@@ -307,7 +307,7 @@ bus.on('online', function() {
 });
 ```
 
-#### Federating a persistified object
+#### Federating a persistable object
 
 ```javascript
 bus.on('online', function() {
@@ -379,20 +379,12 @@ Create a new [Channel](#channel) instance.
 
 ##### bus#persistify(name, object, attributes)
 
-Create a new persisted object.
+Create a new [Persistable](#persistable) object. Persistifying an object adds additional methods to the persistified object.
+See the  API
 
 * `name` - the name of the persisted object.
 * `object` - the object to persistify.
 * `attributes` - an array of attribute names to persist.
-
-Persistifying an object adds the following methods to the object:
-
-* `save(cb)` - save all the dirty properties. The dirty properties are marked as not dirty after the save completes. `cb` has the form `function(err)`.
-* `load(cb)` - load all the tracked properties. All properties are marked as not dirty after the load completes.
-`cb` has the form `function(err, exists)` where `exists` is true if the persisted object was found in the bus.
-* `persist(ttl)` - start a periodic timer to continuously mark the persisted object as being used.
-`ttl` specifies the number of seconds to keep the object alive in the bus.
-* `unpersist()` - stop the periodic timer. This will cause object to expire after the defined ttl provided in the persist method.
 
 ##### bus#federate(object, target)
 
@@ -401,13 +393,6 @@ Do not use any of the object API's before federation setup is complete.
 
 * `object` - `queue`, `channel` or `persistified` objects to federate. These are created normally through `bus#queue`, `bus#channel` and `bus#persistify`.
 * `target` - the target bus url. the url has the form `http[s]://<location>[:<port>]`
-
-Returns a federation object. The following events are emitted on the federation object:
-
-* `ready` - emitted when the federation setup is ready. The callback receives the bus object to use.
-* `unauthorized` - incorrect secret key was used to authenticate with the federation server
-* `closed` - the federation connection closed. the callback receives the `code` and `message`
-* `error` - some error occurred. the callback receives the `error` message
 
 #### Bus Events
 
@@ -560,6 +545,47 @@ Returns `true` if connected to the channel, `false` if not connected.
 * `message` - emitted when a message is received from the channel. The listener callback receives the message as a string.
 * `end` - emitted when the remote peer ends the channel
 * `error` - emitted when an error occurs. The listener callback receives the error.
+
+#### Persistable API
+
+##### persistable#save(callback)
+
+Save all the dirty properties. The dirty properties are marked as not dirty after the save completes.
+
+* `callback` - called when the save has finished. has the form `function(err)`.
+
+##### persistable#load(callback)
+
+Load all the tracked properties. All properties are marked as not dirty after the load completes.
+
+* `callback`  - called when the load has finished. has the form `function(err, exists)`
+where `exists` is true if the persisted object was found in the bus.
+
+##### persistable#persist(ttl)
+
+Start a periodic timer to continuously mark the persisted object as being used.
+
+* `ttl` specifies the number of seconds to keep the object alive in the bus.
+
+##### persistable#unpersist()
+
+Stop the periodic timer. This will cause object to expire after the defined ttl provided in the persist method.
+
+#### Federate API
+
+##### federate#close(disconnect)
+
+Close the federation object.
+
+* `disconnect` - true to disconnect the underlying websocket
+
+#### Federate Events
+
+* `ready` - emitted when the federation setup is ready. The callback receives the bus object to use.
+* `unauthorized` - incorrect secret key was used to authenticate with the federation server
+* `close` - the federation connection closed
+* `error` - some error occurred. the callback receives the `error` message
+
 
 ## Tests
 

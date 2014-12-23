@@ -888,9 +888,12 @@ describe('Bus', function() {
               msgs.length.should.be.exactly(2);
               msgs[0].should.be.exactly('hello');
               msgs[1].should.be.exactly('world');
-              busFed.disconnect();
+              f.close(true);
             });
             q.attach();
+          });
+          f.on('close', function() {
+            busFed.disconnect();
           });
         });
         busFed.on('offline', function() {
@@ -932,9 +935,12 @@ describe('Bus', function() {
             c.on('message', function(message) {
               message.should.be.exactly('world');
               c.disconnect();
-              busFed.disconnect();
+              f.close();
             });
             c.connect();
+          });
+          f.on('close', function() {
+            busFed.disconnect();
           });
 
           var c2 = busFed.channel(name, 'remote', 'local');
@@ -1004,8 +1010,11 @@ describe('Bus', function() {
                   });
                 });
               });
-              busFed.disconnect();
+              f.close();
             });
+          });
+          f.on('close', function() {
+            busFed.disconnect();
           });
         });
         busFed.on('offline', function() {
@@ -1037,10 +1046,13 @@ describe('Bus', function() {
           var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777');
           f.on('error', done);
           f.on('unauthorized', function() {
-            busFed.disconnect();
+            f.close();
           });
           f.on('ready', function() {
             done('ready should not have been called')
+          });
+          f.on('close', function() {
+            busFed.disconnect();
           });
         });
         busFed.on('offline', function() {
