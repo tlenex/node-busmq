@@ -389,9 +389,9 @@ Persistifying an object adds the following methods to the object:
 
 * `save(cb)` - save all the dirty properties. The dirty properties are marked as not dirty after the save completes. `cb` has the form `function(err)`.
 * `load(cb)` - load all the tracked properties. All properties are marked as not dirty after the load completes.
-              `cb` has the form `function(err, exists)` where `exists` is true if the persisted object was found in the bus.
+`cb` has the form `function(err, exists)` where `exists` is true if the persisted object was found in the bus.
 * `persist(ttl)` - start a periodic timer to continuously mark the persisted object as being used.
-                  `ttl` specifies the number of seconds to keep the object alive in the bus.
+`ttl` specifies the number of seconds to keep the object alive in the bus.
 * `unpersist()` - stop the periodic timer. This will cause object to expire after the defined ttl provided in the persist method.
 
 ##### bus#federate(object, target)
