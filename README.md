@@ -392,7 +392,7 @@ Federate `object` to the specified `target` instead of hosting the object on the
 Do not use any of the object API's before federation setup is complete.
 
 * `object` - `queue`, `channel` or `persistified` objects to federate. These are created normally through `bus#queue`, `bus#channel` and `bus#persistify`.
-* `target` - the target bus url. the url has the form `http[s]://<location>[:<port>]`
+* `target` - the target bus url or an already open websocket to the target bus. The url has the form `http[s]://<location>[:<port>]`
 
 #### Bus Events
 
