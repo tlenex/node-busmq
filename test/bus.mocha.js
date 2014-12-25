@@ -845,7 +845,7 @@ describe('Bus', function() {
 
   describe('federation', function() {
 
-    it('federates queue events', function(done) {
+      it('federates queue events', function(done) {
       var fedserver = http.createServer();
       var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
       bus.on('error', function(err) {
@@ -853,7 +853,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 2 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -888,7 +888,7 @@ describe('Bus', function() {
               msgs.length.should.be.exactly(2);
               msgs[0].should.be.exactly('hello');
               msgs[1].should.be.exactly('world');
-              f.close(true);
+              f.close();
             });
             q.attach();
           });
@@ -916,7 +916,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 2 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -976,7 +976,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 2 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1037,7 +1037,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, federate: {secret: 'thisisNOTit'}, logger: console});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 2, secret: 'thisisNOTit' }});
         busFed.on('error', function(err) {
           done(err);
         });

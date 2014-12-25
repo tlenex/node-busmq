@@ -242,15 +242,22 @@ It is sometimes desirable to setup bus instances in different locations, where r
 servers of one location are not directly accessible to other locations. This setup is very common
 when building a bus that spans several data centers, where each data center is isolated behind a firewall.
 
-Federation enables using queues and channels of a bus without access to the redis servers themselves.
-When federating a queue or channel, the federating bus opens a federation channel over web sockets to the target bus,
-and the target bus manages the queue/channel on its redis servers.
+Federation enables using queues, channels and persisted objects of a bus without access to the redis servers themselves.
+When federating an object, the federating bus uses web sockets to the target bus as the federation channel,
+and the target bus manages the object on its redis servers on behalf of the federating bus.
 The federating bus does not host the federated objects on the local redis servers.
 
 Federation is done over web sockets since they are firewall and proxy friendly.
 
-The API and events of a federated queue/channel are exactly the same as a non-federated queue/channel. This is achieved
-using the awesome [dnode](https://github.com/substack/dnode) module for rpc-ing the entire object API.
+The federating bus utilizes a simple pool of hot-connected web sockets. When a bus is initialized, it immediately
+spins up an initial number of web sockets that connect to other bus instances. When federating an object, the bus
+selects a web socket from the pool and starts federating the object over it. Once a web socket is given for federation from the
+pool, the pool immediately opens a new web socket to replace the one that was just given. This way, the pool
+always contains a minimum number of available web sockets for immediate use.
+This behavior provides the best performance by eliminating the need to wait for the web socket to open when starting to federate.
+
+The API and events of a federated objects are exactly the same as a non-federated objects. This is achieved
+using the awesome [dnode](https://github.com/substack/dnode) module for RPCing the object API.
 
 #### Opening a bus with a federation server
 
@@ -265,7 +272,8 @@ var options = {
   redis: 'http://127.0.0.1', // connect this bus to a local running redis
   federate: {
     server: httpServer, // use the provided http server as the federation server
-    port: 8881          // the federation server will listen on this port
+    port: 8881,          // the federation server will listen on this port
+    secret: 'mysecret'
   }
 };
 var bus = Bus.create(options);
@@ -278,6 +286,16 @@ bus.connect();
 #### Federating a queue
 
 ```javascript
+var Bus = require('busmq');
+var options = {
+  redis: 'http://127.0.0.1', // connect this bus to a local running redis
+  federate: {
+    poolSize: 5, // keep the pool size with 5 web sockets
+    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'
+  }
+};
+var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the queue to a bus located at a different data center
  var fed = bus.federate(bus.queue('foo'), 'http://my.other.bus');
@@ -294,6 +312,16 @@ bus.on('online', function() {
 #### Federating a channel
 
 ```javascript
+var Bus = require('busmq');
+var options = {
+  redis: 'http://127.0.0.1', // connect this bus to a local running redis
+  federate: {
+    poolSize: 5, // keep the pool size with 5 web sockets
+    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'
+  }
+};
+var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the channel to a bus located at a different data center
  var fed = bus.federate(bus.channel('bar'), 'http://my.other.bus');
@@ -310,6 +338,16 @@ bus.on('online', function() {
 #### Federating a persistable object
 
 ```javascript
+var Bus = require('busmq');
+var options = {
+  redis: 'http://127.0.0.1', // connect this bus to a local running redis
+  federate: {
+    poolSize: 5, // keep the pool size with 5 web sockets
+    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'
+  }
+};
+var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the channel to a bus located at a different data center
  var fed = bus.federate(bus.persistify('bar', object, ['field1', 'field2']), 'http://my.other.bus');
@@ -335,7 +373,9 @@ Create a new bus instance. Options:
 * `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
   * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open. Do not perform listen - the bus will do it for you.
-  * `port` - the port that the server should listen on
+  * `port` - the port that the federation server should listen on
+  * `urls` - an array of urls of the form `http[s]://<ip-or-host>[:port]` of other bus instances that this bus can federate to. default is an empty array.
+  * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
   * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
 
 Call `bus#connect` to connect to the redis instances and to open the federation server.
