@@ -2,24 +2,27 @@
 
 ![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)
 
-##### Note: version 0.7 breaks API compatibility with 0.6.*
+A high performance, highly available and scalable, message bus and queueing system for node.js.
+Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
-A high performance, highly-available and scalable, message bus and message queueing system for node.js.
-Message queues are backed by [redis](http://redis.io/), a high performance, in-memory key/value store.
+### The Basics
 
-### Core Concepts
-
-* High-availability and scalability through the use of multiple redis instances
-* Federation capabilities over distributed data centers
 * Event based message queues
 * Event based bi-directional channels for peer-to-peer communication (backed by message queues)
-* Delivers a message at most once
+* Scalability through the use of multiple redis instances and node processes
+* Tolerance to dynamic addition of redis instances during scale out
+* High availability through redis master-slave and agnostic node processes
+* Federation capabilities over distributed data centers
+* Delivery of messages at most once
 * Auto expiration of queues after a pre-defined idle time
 
 ### High Availability and Scaling
 
 Scaling is achieved by spreading queues and channels between multiple redis instances.
 The redis instance is selected by performing a calculation on the queue/channel name.
+If the redis instances are added and the designated redis instance of a queue changes because of it then
+the bus will still find the correct redis instance. There will be some time penalty until the system
+stabilizes after the addition.
 
 High availability is achieved by using standard redis high availability setups, such as
 [Redis Sentinal](http://redis.io/topics/sentinel)
@@ -27,9 +30,9 @@ High availability is achieved by using standard redis high availability setups, 
 ## Bus
 
 The bus holds connections to one or more redis instances and is used
-to create `queue`s and `channel`s.
+to create `queue`s, `channel`s and `persistent` objects.
 
-Node processes connecting to the same bus have access to and can use all queues and channels.
+Node processes connecting to the same bus have access to and can use all queues, channels and persistent objects.
 
 node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) module to communicate with the redis instances,
 so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
@@ -44,13 +47,13 @@ bus.on('error', function(err) {
   // an error has occurred
 });
 bus.on('online', function() {
-  // the bus is online - we can create queues
+  // the bus is online - we can use queues, channels ans persistent objects
 });
 bus.on('offline', function() {
   // the bus is offline - redis is down...
 });
 
-// or, connect to multiple redis instances
+// connect the redis instances
 bus.connect();
 ```
 
@@ -67,10 +70,10 @@ can consume messages from a queue. A message is consumed by one consumer at most
 #### Attach and detach
 
 Pushing messages and consuming them requires attaching to the queue.
-The queue will remain in existence for as long as it has at least one attachment.
+The queue will remain in existence for as long as it has at least one client attached to it.
 
-To stop using a queue, detach from it. Once a queue has no more attachments, it will automatically expire
-after a predefined ttl (losing any messages in the queue).
+To stop using a queue, detach from it. Once a queue has no more clients attached, it will automatically expire
+after a predefined ttl (also losing any messages in it).
 
 #### Using a queue
 
@@ -102,7 +105,7 @@ bus.on('online', function() {
     }
   });
   q.attach();
-  q.consume();
+  q.consume(); // the 'message' event will be fired when a message is retrieved
 });
 ```
 
@@ -117,7 +120,7 @@ Each peer in the channel has a role. For all purposes roles are the same, except
 By default, a channel uses role `local` to consume messages and `remote` to push messages.
 Since peers must have opposite roles, if using the default roles, one peer must call `channel#listen` and the other peer must call `channel#connect`.
 
-It is also possible to specify other roles explicity, such as `client` and `server`. This enables specifying the local role and the remote role, and just connecting the channel without calling `listen`. Specifying roles explicitly may add to readability, but not much more than that. 
+It is also possible to specify other roles explicitly, such as `client` and `server`. This enables specifying the local role and the remote role, and just connecting the channel without calling `listen`. Specifying roles explicitly may add to readability, but not much more than that.
 
 #### Using a channel (default roles)
 
@@ -202,12 +205,12 @@ bus.on('online', function() {
 });
 ```
 
-## Persistable
+## Persist Objects
 
 It is possible to persist arbitrary objects to the bus.
 A persistable object defines a set of properties on the object that are tracked for modification. When
 saving a dirty object (where dirty means that some tracked properties have changed) only those dirty properties are
-persisted to the bus. Loading a persistable object reads all of the latest persisted properties.
+persisted to the bus. Loading a persistable object reads all of the persisted properties.
 
 ```javascript
 bus.on('online', function() {
@@ -262,18 +265,15 @@ using the awesome [dnode](https://github.com/substack/dnode) module for RPCing t
 #### Opening a bus with a federation server
 
 ```javascript
-// create the http server to serve as the federation server.
 var http = require('http');
-var httpServer = http.createServer();
-// you can also use express if you like...
-
+var httpServer = http.createServer(); // create the http server to serve as the federation server. you can also use express if you like...
 var Bus = require('busmq');
 var options = {
   redis: 'http://127.0.0.1', // connect this bus to a local running redis
   federate: {
-    server: httpServer, // use the provided http server as the federation server
+    server: httpServer,  // use the provided http server as the federation server
     port: 8881,          // the federation server will listen on this port
-    secret: 'mysecret'
+    secret: 'mysecret'   // a secret key for authorizing clients
   }
 };
 var bus = Bus.create(options);
@@ -292,7 +292,7 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
@@ -318,7 +318,7 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
@@ -344,7 +344,7 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
@@ -377,6 +377,7 @@ Create a new bus instance. Options:
   * `urls` - an array of urls of the form `http[s]://<ip-or-host>[:port]` of other bus instances that this bus can federate to. default is an empty array.
   * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
   * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
+* `logger` - the logger that the bus should use
 
 Call `bus#connect` to connect to the redis instances and to open the federation server.
 
@@ -395,7 +396,7 @@ If the bus gets disconnected from the the redis instances, the `offline` event w
 
 ##### bus#disconnect()
 
-Disconnect from the redis instances and stops the federation server. Once disconnected, the `offline` event will be emitted.
+Disconnect from the redis instances and stop the federation server. Once disconnected, the `offline` event will be emitted.
 
 ##### bus#isOnline()
 
@@ -417,21 +418,21 @@ Create a new [Channel](#channel) instance.
 * `local` - \[optional\] specifies the local role. default is `local`.
 * `remote` - \[optional\] specifies the remote role. default is `remote`.
 
-##### bus#persistify(name, object, attributes)
+##### bus#persistify(name, object, properties)
 
 Create a new [Persistable](#persistable) object. Persistifying an object adds additional methods to the persistified object.
-See the  API
+See the  API for more details.
 
 * `name` - the name of the persisted object.
 * `object` - the object to persistify.
-* `attributes` - an array of attribute names to persist.
+* `properties` - an array of property names to persist.
 
 ##### bus#federate(object, target)
 
 Federate `object` to the specified `target` instead of hosting the object on the local redis servers.
 Do not use any of the object API's before federation setup is complete.
 
-* `object` - `queue`, `channel` or `persistified` objects to federate. These are created normally through `bus#queue`, `bus#channel` and `bus#persistify`.
+* `object` - `queue`, `channel` or `persisted` objects to federate. These are created normally through `bus#queue`, `bus#channel` and `bus#persistify`.
 * `target` - the target bus url or an already open websocket to the target bus. The url has the form `http[s]://<location>[:<port>]`
 
 #### Bus Events
