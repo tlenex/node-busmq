@@ -1,8 +1,8 @@
 var crypto = require('crypto');
-var bunyan = require('bunyan');
 var cluster = require('cluster');
 var config = require('./config').rabbitmq;
-var logger = bunyan.createLogger({name: 'rabbitmq', level: config.logLevel});
+var logger = console;
+logger.debug = logger.info;
 
 process.on('uncaughtException', function (err) {
   console.log('Caught exception: ' + ((err instanceof Error) ? err.stack : err));
@@ -72,7 +72,7 @@ function setupQueue(i) {
       });
       p.on('drain', function() {
         pump(p);
-      })
+      });
 
       c.consume(c.qName, function(m) {
         if (++c.consumed === config.numMessages) {
@@ -119,8 +119,8 @@ function reportBenchmark() {
 // -- pump messages on a producer
 function pump(p) {
   function push() {
-    if (p.sendToQueue(p.qName, message) && ++p.pumped < config.numMessages) {
-      return setImmediate(push);
+    if (p.sendToQueue(p.qName, message)) {
+      return setTimeout(push, 0);
     }
     p.pumped = 0;
   }

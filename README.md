@@ -9,12 +9,14 @@ Message queues are backed by [Redis](http://redis.io/), a high performance, in-m
 
 * Event based message queues
 * Event based bi-directional channels for peer-to-peer communication (backed by message queues)
-* Scalability through the use of multiple redis instances and node processes
-* Tolerance to dynamic addition of redis instances during scale out
-* High availability through redis master-slave and agnostic node processes
-* Federation capabilities over distributed data centers
-* Delivery of messages at most once
+* Reliable delivery of messages (AKA Guarantee Delivery)
+* Persistent Publish/Subscribe
+* Federation over distributed data centers
 * Auto expiration of queues after a pre-defined idle time
+* Scalability through the use of multiple redis instances and node processes
+* High availability through redis master-slave setup and stateless node processes
+* Tolerance to dynamic addition of redis instances during scale out
+* Fast
 
 ### High Availability and Scaling
 
@@ -24,8 +26,8 @@ If the redis instances are added and the designated redis instance of a queue ch
 the bus will still find the correct redis instance. There will be some time penalty until the system
 stabilizes after the addition.
 
-High availability is achieved by using standard redis high availability setups, such as
-[Redis Sentinal](http://redis.io/topics/sentinel)
+High availability for redis is achieved by using standard redis high availability setups, such as
+[Redis Sentinal](http://redis.io/topics/sentinel) or [AWS ElasticCache](http://aws.amazon.com/elasticache/)
 
 ## Bus
 
@@ -61,13 +63,12 @@ bus.connect();
 
 A queue of messages.
 
-Messages are consumed in they order that they are pushed into the queue.
-Once a message is consumed, it will never be consumed again.
+Messages are pushed to the queue and consumed from it in they order that they were pushed.
 
 Any number of clients can produce messages to a queue, and any number of consumers
-can consume messages from a queue. A message is consumed by one consumer at most.
+can consume messages from a queue.
 
-#### Attach and detach
+#### Attach and Detach
 
 Pushing messages and consuming them requires attaching to the queue.
 The queue will remain in existence for as long as it has at least one client attached to it.
@@ -99,7 +100,7 @@ bus.on('online', function() {
   q.on('attached', function() {
     console.log('attached to queue. messages will soon start flowing in...');
   });
-  q.on('message', function(message) {
+  q.on('message', function(message, id) {
     if (message === 'my name if foo') {
       q.detach();
     }
@@ -109,18 +110,71 @@ bus.on('online', function() {
 });
 ```
 
+#### Consumption Modes
+
+There are three modes that messages can be consumed from a queue, with various degrees of
+flexibility for each mode.
+
+##### Unreliable Delivery
+
+This is a *Zero-or-Once* message delivery mode, which is also the default mode.
+Messages are consumed from the queue by one consumer only and will not be consumed again by that consumer or any other consumer.
+This method of consumption is unreliable in a sense that if the consumer crashes before being able to
+handle the message, it is lost forever.
+
+```javascript
+// consume with default settings
+q.consume();
+
+// this is the same as the default settings
+q.consume({reliable: false, remove: true});
+```
+
+##### Reliable Delivery (Guarantee Delivery)
+
+This is a *Once-or-More* message delivery mode, where it is guaranteed that messages will be delivered at least once.
+Every consumed message enters a 'waiting for ack' state. The consumer should call 'ack' on a message in order to
+mark it as handled. When the client issues an 'ack' on the message, the message
+is permanently discarded from the queue and will not be consumed again.
+
+If a client crashes when consuming in this mode, any messages that have not been ACKed will be delivered once more
+when a client starts to consume again.
+
+*Note:* This mode does not work well with multiple consumers. The behavior of multiple clients consuming in reliable
+mode from the same queue is undefined.
+
+```javascript
+// consume message reliably. message with id 3 is the last acked message
+q.consume({reliable: true, last: 3});
+```
+
+##### Persistent Publish/Subscribe
+
+This is a form of publish/subscribe, where all consumers receive all messages, even if they were not consuming at the time messages were
+being pushed to the queue. A consumer can also specify the index of the message to start consuming from.
+
+```javascript
+// consume message without removing them from the queue. start consuming from message at index 0.
+q.consume({remove: false, index: 0});
+```
+
 ## Channel
 
 A bi-directional channel for peer-to-peer communication. Under the hood, a channel uses two message queues,
 where each peer pushes messages to one queue and consumes messages from the other queue.
 It does not matter which peer connects to the channel first.
 
-Each peer in the channel has a role. For all purposes roles are the same, except that the roles determine to which queue messages will be pushed and from which queue they will be consumed. To peers to communicate over the channel, they must have opposite roles.
+Each peer in the channel has a role. For all purposes roles are the same, except that the roles determine to which
+queue messages will be pushed and from which queue they will be consumed. To peers to communicate over the channel, they must have opposite roles.
 
 By default, a channel uses role `local` to consume messages and `remote` to push messages.
 Since peers must have opposite roles, if using the default roles, one peer must call `channel#listen` and the other peer must call `channel#connect`.
 
-It is also possible to specify other roles explicitly, such as `client` and `server`. This enables specifying the local role and the remote role, and just connecting the channel without calling `listen`. Specifying roles explicitly may add to readability, but not much more than that.
+It is also possible to specify other roles explicitly, such as `client` and `server`.
+This enables specifying the local role and the remote role, and just connecting the channel without calling `listen`.
+Specifying roles explicitly may add to readability, but not much more than that.
+
+A channel supports the same consumption modes as a queue does. See [Consumption Modes](#consumption-modes) for details.
 
 #### Using a channel (default roles)
 
@@ -205,7 +259,7 @@ bus.on('online', function() {
 });
 ```
 
-## Persist Objects
+## Persistable
 
 It is possible to persist arbitrary objects to the bus.
 A persistable object defines a set of properties on the object that are tracked for modification. When
@@ -215,7 +269,7 @@ persisted to the bus. Loading a persistable object reads all of the persisted pr
 ```javascript
 bus.on('online', function() {
   var object = {field: 'this field is not persisted'};
-  var p = bus.peristify('obj', object, ['foo', 'bar', 'zoo']);
+  var p = bus.persistify('obj', object, ['foo', 'bar', 'zoo']);
   p.foo = 'hello';
   p.bar = 1;
   p.zoo = true;
@@ -229,7 +283,7 @@ bus.on('online', function() {
   });
 
   // load the persistified properties
-  var p2 = bus.peristify('obj', {}, ['foo', 'bar', 'zoo']);
+  var p2 = bus.persistify('obj', {}, ['foo', 'bar', 'zoo']);
   p2.load(function(err, exists) {
     // exists == true
     // p2.foo == 'world'
@@ -469,10 +523,22 @@ Start consuming messages from the queue.
 The `message` event is emitted whenever a message is consumed from the queue.
 
 Options:
-* `remove` - `true` indicates to remove a read message from the queue, and `false` leaves it in the queue so that it may be read once more. default is `true`.
-*Note*: Mixing consumers that remove messages with consumers that do not remove messages from the same queue results in undefined behavior.
 * `max` if specified, only `max` messages will be consumed from the queue. If not specified,
 messages will be continuously consumed as they are pushed into the queue.
+* `remove` - `true` indicates to remove a read message from the queue, and `false` leaves it in the queue so that it may be read once more. default is `true`.
+*Note*: The behavior of mixing consumers that remove messages with consumers that do not remove messages from the same queue is undefined.
+* `reliable` - applicable only if `remove` is `true`. indicates that every consumed message needs to be ACKed in order not to receive it again in case of
+calling `consume` again. see `queue#ack` for ack details. default is `false`.
+* `last` - applicable only if `reliable` is `true`. indicates the last message id that was ACKed so that only messages with higher id's should be received.
+if any messages still exist in the queue with id's lower than `last` they will be discarded.
+this behaves exactly like calling `queue#ack` with the last id before starting to consume. default is 0.
+
+##### queue#ack(id)
+
+Specifies that the message with the specified id, and all messages with lower id's, can safely be discarded so that
+they should never be consumed again. Ignored if not consuming in reliable mode.
+
+* `id` - the message id to ack
 
 ##### queue#isConsuming([callback])
 
@@ -535,7 +601,7 @@ and `false` if it was just created.
 * `detached` - emitted when detached from the queue. If no other clients are attached to the queue, the queue will remain alive for the `ttl` duration
 * `consuming` - emitted when starting or stopping to consume messages from the queue. The listener callback will receive `true`
 if starting to consume and `false` if stopping to consume.
-* `message` - emitted when a message is consumed from the queue. The listener callback receives the message as a string.
+* `message` - emitted when a message is consumed from the queue. The listener callback receives the message as a string and the id of the message as an integer.
 * `error` - emitted when some error occurs. The listener callback receives the error.
 
 ### Channel API
@@ -572,6 +638,10 @@ Alias to `channel#disconnect()`
 ##### channel#end()
 
 End the channel. No more messages can be pushed or consumed. This also caused the peer to disconnect from the channel and close the message queues.
+
+##### channel#ack(id)
+
+See [queue#ack](#queueackid) for details
 
 ##### channel#isAttached([callback])
 

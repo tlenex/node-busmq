@@ -11,7 +11,7 @@ var producers = [];
 var consumers = [];
 
 // -- create the bus
-var bus = require('./../lib/bus').create();
+var bus = require('./../lib/bus').create({redis: config.urls});
 bus.on('error', function(err) {
   console.log('BUS ERROR: ' + err);
 });
@@ -21,13 +21,13 @@ bus.on('offline', function(err) {
 bus.on('online', function() {
   setupBenchmark();
 });
-bus.connect(config.urls);
+bus.connect();
 
 // -- setup the benchmark
 function setupBenchmark() {
   for (var i = 0; i < config.numQueues; ++i) {
     setupQueue(i);
-  };
+  }
 }
 
 // -- setup queues
@@ -106,7 +106,7 @@ function startBenchmark() {
   producers.forEach(function(p) {
     pump(p);
   });
-  setInterval(reportBenchmark, 3000);
+  setInterval(reportBenchmark, 2000);
 }
 
 function reportBenchmark() {
@@ -128,19 +128,17 @@ function reportBenchmark() {
 
 // -- pump messages on a producer
 function pump(p) {
-  function _push() {
+  if (p.pumping) return;
+  p.pumping = true;
+  function push() {
     ++totalPushed;
-    if (p.push(config.message)) {
-      setImmediate(_push);
+    if (p.push(config.message) !== false) {
+      setTimeout(push,0);
+    } else {
+      p.pumping = false;
     }
-//    p.push(config.message, function() {
-//      if (p.pushed() < config.numMessages) {
-//        return push();
-//      }
-//      p._pushed = 0;
-//    });
   }
-  _push();
+  push();
 }
 
 var workerId = _workerId();

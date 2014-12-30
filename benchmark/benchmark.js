@@ -1,11 +1,11 @@
 var crypto = require('crypto');
-var bunyan = require('bunyan');
 var cluster = require('cluster');
 
 //var config = require('./config').rabbitmq;
 var config = require('./config').redis;
 
-var logger = bunyan.createLogger({name: 'bus', level: config.logLevel});
+var logger = console;
+logger.debug = logger.info;
 
 process.on('uncaughtException', function (err) {
   console.error('Caught exception: ' + ((err instanceof Error) ? err.stack : err));

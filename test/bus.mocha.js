@@ -625,6 +625,104 @@ describe('Bus', function() {
       bus.connect();
     });
 
+    it('consume reliable', function(done) {
+      var consumed = 0;
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('detached', function() {
+          bus.disconnect();
+        });
+        p.on('attached', function() {
+          p.push('1');
+          p.push('2');
+          p.push('3');
+          p.push('4');
+          p.push('5');
+          var firstConsume = true;
+          var lastMessage;
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('message', function(message, id) {
+            ++consumed;
+            lastMessage = message;
+            // ack the first and second messages
+            if (message === '1' || message === '2') {
+              consumed.should.be.exactly(parseInt(message));
+              id.should.be.exactly(consumed);
+              c.ack(id);
+            }
+            // we should be getting the 3rd message twice - the first time without ackin it
+            // and the second time because we didn't ack it the first time
+            if (message === '3') {
+              // do not ack the 3rd message the first time around
+              if (firstConsume) {
+                consumed.should.be.exactly(3);
+                id.should.be.exactly(3);
+                c.stop();
+                firstConsume = false;
+              } else {
+                consumed.should.be.exactly(4);
+                id.should.be.exactly(3);
+                c.ack(id);
+              }
+            }
+            if (message === '4') {
+              consumed.should.be.exactly(5);
+              id.should.be.exactly(4);
+              // stop consuming again and ack the message when starting to consume again
+              c.stop();
+            }
+            if (message === '5') {
+              consumed.should.be.exactly(6);
+              id.should.be.exactly(5);
+              // we're done
+              c.detach();
+            }
+          });
+          c.on('detached', function() {
+            p.detach();
+          });
+          c.on('consuming', function(status) {
+            if (consumed === 0) {
+              status.should.be.exactly(true);
+            }
+            if (consumed === 3) {
+              lastMessage.should.be.exactly('3');
+              if (status === false) {
+                // start consuming again
+                c.consume({reliable: true});
+              }
+            }
+            if (consumed === 5) {
+              lastMessage.should.be.exactly('4');
+              if (status === false) {
+                // start consuming again and specify the last acked message
+                c.consume({reliable: true, last: 4});
+              }
+            }
+            if (consumed === 6) {
+              lastMessage.should.be.exactly('5');
+              status.should.be.exactly(false);
+            }
+          });
+          c.on('attached', function() {
+            c.consume({reliable: true});
+          });
+          c.attach();
+        });
+        p.attach({ttl: 100});
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
     it('should set and get arbitrary metadata', function(done) {
       var key1 = 'key1';
       var value1 = 'value1';
@@ -801,6 +899,93 @@ describe('Bus', function() {
         Should(cEvents['remote:connect']).equal(true);
         Should(cEvents['message']).equal(5);
         Should(cEvents['end']).equal(true);
+        Should(cEvents['error']).equal(undefined);
+
+        done();
+      });
+      bus.connect();
+    });
+
+    it('reliable channel', function(done) {
+      var sEvents = {msg: 0};
+      var cEvents = {msg: 0};
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var cName = 'test'+Math.random();
+        var cServer = bus.channel(cName);
+        var cClient = bus.channel(cName);
+        cServer.on('error', function(error) {
+          sEvents['error'] = error;
+          bus.disconnect();
+        });
+        cServer.on('connect', function() {
+          sEvents['connect'] = true;
+          cClient.on('error', function(error) {
+            cEvents['error'] = error;
+            bus.disconnect();
+          });
+          cClient.on('connect', function() {
+            cEvents['connect'] = true;
+          });
+          cClient.on('remote:connect', function() {
+            cEvents['remote:connect'] = true;
+            cClient.send(++cEvents.msg);
+          });
+          cClient.on('disconnect', function() {
+            // connect again to the channel, we should start getting messages again
+            cClient.connect({reliable: true});
+          });
+          cClient.on('message', function(message, id) {
+            // count the number of times a message was received
+            cEvents[message] = cEvents[message] || 0;
+            ++cEvents[message];
+            if (parseInt(message) < 5) {
+              if (message === '3' && cEvents[message] === 1) {
+                // disconnect without acking the message.
+                // we expect to get it again when we connect again
+                cClient.disconnect();
+              } else {
+                cClient.send(++cEvents.msg);
+                cClient.ack(id);
+              }
+            } else {
+              cClient.end();
+            }
+          });
+          cClient.on('end', function() {
+            cEvents['end'] = true;
+          });
+          cClient.connect({reliable: true});
+        });
+        cServer.on('remote:connect', function() {
+          sEvents['remote:connect'] = true;
+        });
+        cServer.on('message', function(message) {
+          message.should.be.exactly((++sEvents.msg)+'');
+          cServer.send(sEvents.msg);
+        });
+        cServer.on('end', function() {
+          sEvents['end'] = true;
+          bus.disconnect();
+        });
+        cServer.listen({reliable: true});
+      });
+      bus.on('offline', function() {
+        Should(sEvents['connect']).equal(true);
+        Should(sEvents['remote:connect']).equal(true);
+        Should(sEvents.msg).equal(5);
+        Should(sEvents['end']).equal(true);
+        Should(sEvents['error']).equal(undefined);
+
+        Should(cEvents['connect']).equal(true);
+        Should(cEvents['remote:connect']).equal(true);
+        Should(cEvents['1']).equal(1);
+        Should(cEvents['2']).equal(1);
+        Should(cEvents['3']).equal(2);
+        Should(cEvents['4']).equal(1);
+        Should(cEvents['5']).equal(1);
+        Should(cEvents['end']).equal(undefined);
         Should(cEvents['error']).equal(undefined);
 
         done();
