@@ -3,6 +3,8 @@ var Should = require('should');
 var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
 
+var fedserver;
+
 var redisPorts = [9888];
 var redisUrls = [];
 redisPorts.forEach(function(port) {
@@ -1030,22 +1032,33 @@ describe('Bus', function() {
 
   describe('federation', function() {
 
-      it('federates queue events', function(done) {
-      var fedserver = http.createServer();
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+    beforeEach(function(done) {
+      fedserver = http.createServer();
+      fedserver.listen(9777);
+      done();
+    });
+
+    afterEach(function(done) {
+      fedserver.close();
+      done();
+    });
+
+    it('federates queue events', function(done) {
+
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
         busFed.on('online', function() {
           var msgs = [];
           var name = 'q'+Date.now();
-          var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777');
+          var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777/federate');
           f.on('error', done);
           f.on('unauthorized', function() {
             done('unauthorized')
@@ -1094,8 +1107,7 @@ describe('Bus', function() {
     });
 
     it('federates channel events', function(done) {
-      var fedserver = http.createServer();
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
@@ -1154,8 +1166,7 @@ describe('Bus', function() {
     });
 
     it('federates persisted objects', function(done) {
-      var fedserver = http.createServer();
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777}, logger: console});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
@@ -1215,8 +1226,7 @@ describe('Bus', function() {
     });
 
     it('does not allow federation with wrong secret', function(done) {
-      var fedserver = http.createServer();
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, port: 9777, secret: 'thisisit'}, logger: console});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, secret: 'thisisit'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
