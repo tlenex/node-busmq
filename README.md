@@ -326,8 +326,8 @@ var options = {
   redis: 'http://127.0.0.1', // connect this bus to a local running redis
   federate: {
     server: httpServer,  // use the provided http server as the federation server
-    port: 8881,          // the federation server will listen on this port
-    secret: 'mysecret'   // a secret key for authorizing clients
+    secret: 'mysecret',   // a secret key for authorizing clients
+    path: '/my/fed/path'
   }
 };
 var bus = Bus.create(options);
@@ -346,7 +346,8 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'  // the secret ket to authorize with the federation server
+    secret: 'mysecret',  // the secret ket to authorize with the federation server
+    path: '/my/fed/path'
   }
 };
 var bus = Bus.create(options);
@@ -372,7 +373,8 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'  // the secret ket to authorize with the federation server
+    secret: 'mysecret',  // the secret ket to authorize with the federation server
+    path: '/my/fed/path'
   }
 };
 var bus = Bus.create(options);
@@ -398,7 +400,8 @@ var options = {
   federate: {
     poolSize: 5, // keep the pool size with 5 web sockets
     urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret'  // the secret ket to authorize with the federation server
+    secret: 'mysecret',  // the secret ket to authorize with the federation server
+    path: '/my/fed/path'
   }
 };
 var bus = Bus.create(options);
@@ -427,7 +430,7 @@ Create a new bus instance. Options:
 * `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
   * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open. Do not perform listen - the bus will do it for you.
-  * `port` - the port that the federation server should listen on
+  * `path` - the path within the server to accept federation requests on
   * `urls` - an array of urls of the form `http[s]://<ip-or-host>[:port]` of other bus instances that this bus can federate to. default is an empty array.
   * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
   * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
