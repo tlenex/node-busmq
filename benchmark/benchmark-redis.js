@@ -50,7 +50,10 @@ function setupQueue(i) {
   p.on('closed', function() {
   });
   p.on('drain', function() {
-    pump(p);
+//    console.log(p.id + ' DRAIN');
+    setTimeout(function() {
+      pump(p);
+    }, 0)
   });
   p.on('attached', function() {
     var c = bus.queue(cqName);
