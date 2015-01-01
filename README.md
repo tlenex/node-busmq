@@ -462,6 +462,9 @@ It is also apparent that the push/consume throughput is quite consistent over ti
 
 ![Benchmark results](benchmark/results/busmq-benchmark.png)
 
+Additional testing indicates that the size of the messages has little to no impact on the throughput.
+However, increasing the number of queues by an order of magnitude does effect the performance.
+
 ## API
 
 Enough with examples. Let's see the API.
