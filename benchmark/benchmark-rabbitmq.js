@@ -126,7 +126,7 @@ function reportBenchmark() {
 // -- pump messages on a producer
 function pump(p) {
   function push() {
-    if (p.sendToQueue(p.qName, message)) {
+    if (p.sendToQueue(p.qName, config.message)) {
       setTimeout(push, 0);
     }
   }
