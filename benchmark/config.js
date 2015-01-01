@@ -7,7 +7,7 @@ var logLevel = 'info';
 exports.redis = {
   system: 'redis',
   urls: ['redis://127.0.0.1:7776', 'redis://127.0.0.1:7777'],
-  numWorkers: 2,
+  numWorkers: 4,
   numQueues: 100,
   messageLength: messageLength,
   message: message,

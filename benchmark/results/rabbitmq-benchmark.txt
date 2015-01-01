@@ -1,0 +1,734 @@
+
+Benchmark rabbitmq
+------------------------
+4 workers
+100 queues per worker
+32 bytes per message
+------------------------
+
+Setting up benchmark... received message ready from worker 1
+received message ready from worker 3
+received message ready from worker 4
+received message ready from worker 2
+done
+Running benchmark... 
+received message {"p":4300,"c":37565} from worker 2
+received message {"p":5641,"c":12346} from worker 1
+received message {"p":5200,"c":12699} from worker 4
+received message {"p":5618,"c":10400} from worker 3
+[1] push: 9959 msgs/sec, consume: 35025 msgs/sec
+received message {"p":5200,"c":5676} from worker 2
+received message {"p":5659,"c":5217} from worker 1
+received message {"p":5200,"c":5602} from worker 4
+received message {"p":5618,"c":5300} from worker 3
+[2] push: 10842 msgs/sec, consume: 10901 msgs/sec
+received message {"p":5300,"c":5640} from worker 2
+received message {"p":5632,"c":5286} from worker 1
+received message {"p":5300,"c":5636} from worker 4
+received message {"p":5624,"c":5300} from worker 3
+[3] push: 10928 msgs/sec, consume: 10931 msgs/sec
+received message {"p":5300,"c":5677} from worker 2
+received message {"p":5685,"c":5304} from worker 1
+received message {"p":5300,"c":5661} from worker 4
+received message {"p":5676,"c":5300} from worker 3
+[4] push: 10982 msgs/sec, consume: 10972 msgs/sec
+received message {"p":5300,"c":5655} from worker 2
+received message {"p":5646,"c":5295} from worker 1
+received message {"p":5300,"c":5668} from worker 4
+received message {"p":5645,"c":5300} from worker 3
+[5] push: 10949 msgs/sec, consume: 10963 msgs/sec
+received message {"p":5300,"c":5656} from worker 2
+received message {"p":5635,"c":5299} from worker 1
+received message {"p":5300,"c":5647} from worker 4
+received message {"p":5654,"c":5300} from worker 3
+[6] push: 10942 msgs/sec, consume: 10949 msgs/sec
+received message {"p":5400,"c":5641} from worker 2
+received message {"p":5671,"c":5300} from worker 1
+received message {"p":5300,"c":5655} from worker 4
+received message {"p":5654,"c":5300} from worker 3
+[7] push: 11015 msgs/sec, consume: 10950 msgs/sec
+received message {"p":5300,"c":5610} from worker 2
+received message {"p":5611,"c":5338} from worker 1
+received message {"p":5300,"c":5621} from worker 4
+received message {"p":5665,"c":5300} from worker 3
+[8] push: 10924 msgs/sec, consume: 10920 msgs/sec
+received message {"p":5300,"c":5700} from worker 2
+received message {"p":5657,"c":5203} from worker 1
+received message {"p":5300,"c":5686} from worker 4
+received message {"p":5641,"c":5300} from worker 3
+[9] push: 10949 msgs/sec, consume: 10945 msgs/sec
+received message {"p":5200,"c":5645} from worker 2
+received message {"p":5659,"c":5358} from worker 1
+received message {"p":5300,"c":5637} from worker 4
+received message {"p":5662,"c":5300} from worker 3
+[10] push: 10911 msgs/sec, consume: 10970 msgs/sec
+received message {"p":5300,"c":5640} from worker 2
+received message {"p":5658,"c":5300} from worker 1
+received message {"p":5300,"c":5626} from worker 4
+received message {"p":5652,"c":5201} from worker 3
+[11] push: 10959 msgs/sec, consume: 10887 msgs/sec
+received message {"p":5300,"c":5677} from worker 2
+received message {"p":5655,"c":5300} from worker 1
+received message {"p":5300,"c":5698} from worker 4
+received message {"p":5644,"c":5399} from worker 3
+[12] push: 10950 msgs/sec, consume: 11038 msgs/sec
+received message {"p":5300,"c":5646} from worker 2
+received message {"p":5647,"c":5301} from worker 1
+received message {"p":5300,"c":5662} from worker 4
+received message {"p":5659,"c":5299} from worker 3
+[13] push: 10950 msgs/sec, consume: 10951 msgs/sec
+received message {"p":5300,"c":5646} from worker 2
+received message {"p":5657,"c":5299} from worker 1
+received message {"p":5300,"c":5644} from worker 4
+received message {"p":5639,"c":5300} from worker 3
+[14] push: 10943 msgs/sec, consume: 10940 msgs/sec
+received message {"p":5300,"c":5635} from worker 2
+received message {"p":5653,"c":5306} from worker 1
+received message {"p":5300,"c":5624} from worker 4
+received message {"p":5651,"c":5301} from worker 3
+[15] push: 10953 msgs/sec, consume: 10934 msgs/sec
+received message {"p":5300,"c":5645} from worker 2
+received message {"p":5647,"c":5309} from worker 1
+received message {"p":5300,"c":5638} from worker 4
+received message {"p":5674,"c":5300} from worker 3
+[16] push: 10961 msgs/sec, consume: 10947 msgs/sec
+received message {"p":5400,"c":5661} from worker 2
+received message {"p":5646,"c":5385} from worker 1
+received message {"p":5300,"c":5658} from worker 4
+received message {"p":5644,"c":5300} from worker 3
+[17] push: 10993 msgs/sec, consume: 11000 msgs/sec
+received message {"p":5300,"c":5656} from worker 2
+received message {"p":5671,"c":5201} from worker 1
+received message {"p":5300,"c":5661} from worker 4
+received message {"p":5653,"c":5301} from worker 3
+[18] push: 10964 msgs/sec, consume: 10911 msgs/sec
+received message {"p":5300,"c":5651} from worker 2
+received message {"p":5625,"c":5399} from worker 1
+received message {"p":5400,"c":5653} from worker 4
+received message {"p":5660,"c":5300} from worker 3
+[19] push: 10993 msgs/sec, consume: 11002 msgs/sec
+received message {"p":5300,"c":5662} from worker 2
+received message {"p":5659,"c":5238} from worker 1
+received message {"p":5200,"c":5672} from worker 4
+received message {"p":5648,"c":5300} from worker 3
+[20] push: 10903 msgs/sec, consume: 10935 msgs/sec
+received message {"p":5300,"c":5661} from worker 2
+received message {"p":5660,"c":5263} from worker 1
+received message {"p":5300,"c":5651} from worker 4
+received message {"p":5650,"c":5399} from worker 3
+[21] push: 10960 msgs/sec, consume: 10992 msgs/sec
+received message {"p":5300,"c":5662} from worker 2
+received message {"p":5648,"c":5300} from worker 1
+received message {"p":5300,"c":5662} from worker 4
+received message {"p":5652,"c":5300} from worker 3
+[22] push: 10950 msgs/sec, consume: 10962 msgs/sec
+received message {"p":5300,"c":5611} from worker 2
+received message {"p":5659,"c":5345} from worker 1
+received message {"p":5300,"c":5660} from worker 4
+received message {"p":5660,"c":5300} from worker 3
+[23] push: 10958 msgs/sec, consume: 10956 msgs/sec
+received message {"p":5300,"c":5646} from worker 2
+received message {"p":5657,"c":5255} from worker 1
+received message {"p":5300,"c":5607} from worker 4
+received message {"p":5670,"c":5300} from worker 3
+[24] push: 10966 msgs/sec, consume: 10906 msgs/sec
+received message {"p":5400,"c":5643} from worker 2
+received message {"p":5665,"c":5314} from worker 1
+received message {"p":5400,"c":5710} from worker 4
+received message {"p":5652,"c":5300} from worker 3
+[25] push: 11061 msgs/sec, consume: 10986 msgs/sec
+received message {"p":5300,"c":5692} from worker 2
+received message {"p":5654,"c":5385} from worker 1
+received message {"p":5300,"c":5632} from worker 4
+received message {"p":5651,"c":5269} from worker 3
+[26] push: 10954 msgs/sec, consume: 10991 msgs/sec
+received message {"p":5200,"c":5708} from worker 2
+received message {"p":5656,"c":5300} from worker 1
+received message {"p":5300,"c":5673} from worker 4
+received message {"p":5663,"c":5331} from worker 3
+[27] push: 10905 msgs/sec, consume: 11001 msgs/sec
+received message {"p":5400,"c":5578} from worker 2
+received message {"p":5653,"c":5242} from worker 1
+received message {"p":5300,"c":5643} from worker 4
+received message {"p":5654,"c":5300} from worker 3
+[28] push: 10998 msgs/sec, consume: 10876 msgs/sec
+received message {"p":5200,"c":5703} from worker 2
+received message {"p":5637,"c":5358} from worker 1
+received message {"p":5300,"c":5654} from worker 4
+received message {"p":5646,"c":5300} from worker 3
+[29] push: 10891 msgs/sec, consume: 11007 msgs/sec
+received message {"p":5400,"c":5657} from worker 2
+received message {"p":5672,"c":5300} from worker 1
+received message {"p":5300,"c":5656} from worker 4
+received message {"p":5673,"c":5300} from worker 3
+[30] push: 11022 msgs/sec, consume: 10956 msgs/sec
+received message {"p":5300,"c":5637} from worker 2
+received message {"p":5645,"c":5300} from worker 1
+received message {"p":5300,"c":5637} from worker 4
+received message {"p":5653,"c":5301} from worker 3
+[31] push: 10946 msgs/sec, consume: 10934 msgs/sec
+received message {"p":5300,"c":5685} from worker 2
+received message {"p":5650,"c":5300} from worker 1
+received message {"p":5300,"c":5680} from worker 4
+received message {"p":5641,"c":5319} from worker 3
+[32] push: 10952 msgs/sec, consume: 10999 msgs/sec
+received message {"p":5300,"c":5630} from worker 2
+received message {"p":5672,"c":5383} from worker 1
+received message {"p":5300,"c":5647} from worker 4
+received message {"p":5661,"c":5359} from worker 3
+[33] push: 10959 msgs/sec, consume: 11002 msgs/sec
+received message {"p":5300,"c":5623} from worker 2
+received message {"p":5637,"c":5259} from worker 1
+received message {"p":5300,"c":5642} from worker 4
+received message {"p":5652,"c":5321} from worker 3
+[34] push: 10944 msgs/sec, consume: 10922 msgs/sec
+received message {"p":5300,"c":5587} from worker 2
+received message {"p":5677,"c":5220} from worker 1
+received message {"p":5300,"c":5606} from worker 4
+received message {"p":5649,"c":5008} from worker 3
+[35] push: 10951 msgs/sec, consume: 10699 msgs/sec
+received message {"p":5400,"c":48} from worker 2
+received message {"p":5638,"c":74} from worker 1
+received message {"p":5400,"c":126} from worker 4
+received message {"p":5664,"c":59} from worker 3
+[36] push: 11053 msgs/sec, consume: 154 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5653,"c":4120} from worker 1
+received message {"p":5300,"c":433} from worker 4
+received message {"p":5671,"c":8080} from worker 3
+[37] push: 10913 msgs/sec, consume: 6317 msgs/sec
+received message {"p":5200,"c":10670} from worker 2
+received message {"p":5689,"c":11744} from worker 1
+received message {"p":5200,"c":16413} from worker 4
+received message {"p":5691,"c":7922} from worker 3
+[38] push: 10891 msgs/sec, consume: 23376 msgs/sec
+received message {"p":5300,"c":11686} from worker 2
+received message {"p":5651,"c":5008} from worker 1
+received message {"p":5300,"c":5344} from worker 4
+received message {"p":5657,"c":5102} from worker 3
+[39] push: 10955 msgs/sec, consume: 13571 msgs/sec
+received message {"p":5300,"c":6020} from worker 2
+received message {"p":5674,"c":5591} from worker 1
+received message {"p":5300,"c":6098} from worker 4
+received message {"p":5663,"c":5472} from worker 3
+[40] push: 10970 msgs/sec, consume: 11592 msgs/sec
+received message {"p":5300,"c":5317} from worker 2
+received message {"p":5662,"c":4954} from worker 1
+received message {"p":5300,"c":5294} from worker 4
+received message {"p":5661,"c":4879} from worker 3
+[41] push: 10962 msgs/sec, consume: 10222 msgs/sec
+received message {"p":5300,"c":5787} from worker 2
+received message {"p":5679,"c":4374} from worker 1
+received message {"p":5200,"c":5709} from worker 4
+received message {"p":5666,"c":5127} from worker 3
+[42] push: 10921 msgs/sec, consume: 10497 msgs/sec
+received message {"p":5200,"c":4578} from worker 2
+received message {"p":5653,"c":5752} from worker 1
+received message {"p":5300,"c":3429} from worker 4
+received message {"p":5666,"c":5249} from worker 3
+[43] push: 10911 msgs/sec, consume: 9505 msgs/sec
+received message {"p":5400,"c":1100} from worker 2
+received message {"p":5639,"c":692} from worker 1
+received message {"p":5300,"c":2393} from worker 4
+received message {"p":5607,"c":395} from worker 3
+[44] push: 10977 msgs/sec, consume: 2291 msgs/sec
+received message {"p":5200,"c":11437} from worker 2
+received message {"p":5639,"c":10522} from worker 1
+received message {"p":5200,"c":11462} from worker 4
+received message {"p":5687,"c":10708} from worker 3
+[45] push: 10863 msgs/sec, consume: 22064 msgs/sec
+received message {"p":5200,"c":5706} from worker 2
+received message {"p":5649,"c":5284} from worker 1
+received message {"p":5200,"c":5648} from worker 4
+received message {"p":5657,"c":5250} from worker 3
+[46] push: 10852 msgs/sec, consume: 10943 msgs/sec
+received message {"p":5300,"c":4886} from worker 2
+received message {"p":5671,"c":5124} from worker 1
+received message {"p":5300,"c":5597} from worker 4
+received message {"p":5653,"c":5249} from worker 3
+[47] push: 10962 msgs/sec, consume: 10428 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5663,"c":5299} from worker 1
+received message {"p":5300,"c":5582} from worker 4
+received message {"p":5668,"c":5050} from worker 3
+[48] push: 10918 msgs/sec, consume: 7967 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5663,"c":5400} from worker 1
+received message {"p":5200,"c":3765} from worker 4
+received message {"p":5654,"c":5450} from worker 3
+[49] push: 10909 msgs/sec, consume: 7308 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5637,"c":701} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5651,"c":1402} from worker 3
+[50] push: 10995 msgs/sec, consume: 1052 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5645,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5649,"c":0} from worker 3
+[51] push: 10958 msgs/sec, consume: 0 msgs/sec
+received message {"p":5400,"c":0} from worker 2
+received message {"p":5634,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5665,"c":0} from worker 3
+[52] push: 11000 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5644,"c":0} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5652,"c":0} from worker 3
+[53] push: 10999 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5655,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5650,"c":0} from worker 3
+[54] push: 10949 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5644,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5637,"c":0} from worker 3
+[55] push: 10944 msgs/sec, consume: 0 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5662,"c":0} from worker 1
+received message {"p":5200,"c":0} from worker 4
+received message {"p":5652,"c":0} from worker 3
+[56] push: 10854 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5647,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5612,"c":0} from worker 3
+[57] push: 10928 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5642,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5646,"c":0} from worker 3
+[58] push: 10946 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5658,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5648,"c":1} from worker 3
+[59] push: 10952 msgs/sec, consume: 1 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5655,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5647,"c":0} from worker 3
+[60] push: 10903 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5638,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5634,"c":0} from worker 3
+[61] push: 10937 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5631,"c":0} from worker 1
+received message {"p":5300,"c":10} from worker 4
+received message {"p":5636,"c":0} from worker 3
+[62] push: 10932 msgs/sec, consume: 5 msgs/sec
+received message {"p":5400,"c":27} from worker 2
+received message {"p":5665,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5648,"c":42} from worker 3
+[63] push: 11007 msgs/sec, consume: 35 msgs/sec
+received message {"p":5200,"c":48} from worker 2
+received message {"p":5627,"c":45} from worker 1
+received message {"p":5300,"c":72} from worker 4
+received message {"p":5668,"c":48} from worker 3
+[64] push: 10895 msgs/sec, consume: 107 msgs/sec
+received message {"p":5200,"c":37869} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5100,"c":5005} from worker 4
+received message {"p":5576,"c":0} from worker 3
+[65] push: 10590 msgs/sec, consume: 21440 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5200,"c":28621} from worker 1
+received message {"p":5000,"c":20232} from worker 4
+received message {"p":5409,"c":0} from worker 3
+[66] push: 10406 msgs/sec, consume: 24429 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5300,"c":11186} from worker 1
+received message {"p":5200,"c":26753} from worker 4
+received message {"p":5184,"c":496} from worker 3
+[67] push: 10494 msgs/sec, consume: 19220 msgs/sec
+received message {"p":4200,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":4800,"c":52478} from worker 3
+[68] push: 9796 msgs/sec, consume: 26227 msgs/sec
+received message {"p":5400,"c":0} from worker 2
+received message {"p":5400,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[69] push: 10699 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[70] push: 10598 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":2841} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5200,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[71] push: 10548 msgs/sec, consume: 1421 msgs/sec
+received message {"p":5200,"c":41974} from worker 2
+received message {"p":5000,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5100,"c":0} from worker 3
+[72] push: 10299 msgs/sec, consume: 20985 msgs/sec
+received message {"p":5300,"c":2693} from worker 2
+received message {"p":5400,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[73] push: 10691 msgs/sec, consume: 1346 msgs/sec
+received message {"p":5400,"c":0} from worker 2
+received message {"p":5400,"c":0} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[74] push: 10754 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[75] push: 10652 msgs/sec, consume: 0 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5100,"c":11990} from worker 4
+received message {"p":5200,"c":0} from worker 3
+[76] push: 10387 msgs/sec, consume: 5988 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5200,"c":10628} from worker 1
+received message {"p":5100,"c":38313} from worker 4
+received message {"p":4900,"c":0} from worker 3
+[77] push: 10207 msgs/sec, consume: 24486 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5200,"c":15366} from worker 1
+received message {"p":5200,"c":0} from worker 4
+received message {"p":5300,"c":7017} from worker 3
+[78] push: 10449 msgs/sec, consume: 11191 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5100,"c":34657} from worker 3
+[79] push: 10501 msgs/sec, consume: 17330 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5200,"c":0} from worker 1
+received message {"p":5200,"c":0} from worker 4
+received message {"p":5200,"c":19064} from worker 3
+[80] push: 10450 msgs/sec, consume: 9532 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5200,"c":0} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[81] push: 10598 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[82] push: 10604 msgs/sec, consume: 0 msgs/sec
+received message {"p":5200,"c":0} from worker 2
+received message {"p":5200,"c":0} from worker 1
+received message {"p":5200,"c":0} from worker 4
+received message {"p":5200,"c":0} from worker 3
+[83] push: 10396 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5400,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[84] push: 10647 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5300,"c":0} from worker 1
+received message {"p":5300,"c":0} from worker 4
+received message {"p":5300,"c":1} from worker 3
+[85] push: 10605 msgs/sec, consume: 1 msgs/sec
+received message {"p":5300,"c":2} from worker 2
+received message {"p":5176,"c":0} from worker 1
+received message {"p":5400,"c":620} from worker 4
+received message {"p":5200,"c":2873} from worker 3
+[86] push: 10537 msgs/sec, consume: 1748 msgs/sec
+received message {"p":5100,"c":178} from worker 2
+received message {"p":5335,"c":0} from worker 1
+received message {"p":5100,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[87] push: 10415 msgs/sec, consume: 89 msgs/sec
+received message {"p":5300,"c":5} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":5300,"c":67} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[88] push: 10563 msgs/sec, consume: 36 msgs/sec
+received message {"p":5200,"c":395} from worker 2
+received message {"p":5044,"c":0} from worker 1
+received message {"p":5300,"c":2007} from worker 4
+received message {"p":5300,"c":21981} from worker 3
+[89] push: 10421 msgs/sec, consume: 12190 msgs/sec
+received message {"p":5200,"c":2052} from worker 2
+received message {"p":5141,"c":2009} from worker 1
+received message {"p":5100,"c":9185} from worker 4
+received message {"p":5000,"c":21581} from worker 3
+[90] push: 10222 msgs/sec, consume: 17416 msgs/sec
+received message {"p":4900,"c":24373} from worker 2
+received message {"p":5044,"c":20869} from worker 1
+received message {"p":5000,"c":0} from worker 4
+received message {"p":5200,"c":0} from worker 3
+[91] push: 10072 msgs/sec, consume: 22621 msgs/sec
+received message {"p":5200,"c":21445} from worker 2
+received message {"p":4947,"c":7747} from worker 1
+received message {"p":5300,"c":6762} from worker 4
+received message {"p":5200,"c":0} from worker 3
+[92] push: 10326 msgs/sec, consume: 17980 msgs/sec
+received message {"p":5300,"c":170} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":5400,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[93] push: 10572 msgs/sec, consume: 86 msgs/sec
+received message {"p":5300,"c":26391} from worker 2
+received message {"p":4850,"c":0} from worker 1
+received message {"p":4380,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[94] push: 9962 msgs/sec, consume: 13192 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5238,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[95] push: 9452 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[96] push: 9355 msgs/sec, consume: 0 msgs/sec
+received message {"p":5300,"c":0} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2916,"c":17182} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[97] push: 9289 msgs/sec, consume: 8554 msgs/sec
+received message {"p":5116,"c":0} from worker 2
+received message {"p":5044,"c":0} from worker 1
+received message {"p":2754,"c":27798} from worker 4
+received message {"p":5200,"c":0} from worker 3
+[98] push: 9058 msgs/sec, consume: 13900 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":5238,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[99] push: 9370 msgs/sec, consume: 0 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":5044,"c":6341} from worker 1
+received message {"p":2916,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[100] push: 9194 msgs/sec, consume: 3169 msgs/sec
+received message {"p":5044,"c":0} from worker 2
+received message {"p":5141,"c":26541} from worker 1
+received message {"p":2808,"c":0} from worker 4
+received message {"p":5300,"c":3724} from worker 3
+[101] push: 9149 msgs/sec, consume: 15136 msgs/sec
+received message {"p":5044,"c":0} from worker 2
+received message {"p":5044,"c":0} from worker 1
+received message {"p":2916,"c":0} from worker 4
+received message {"p":5100,"c":43275} from worker 3
+[102] push: 9051 msgs/sec, consume: 21635 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":5238,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[103] push: 9424 msgs/sec, consume: 0 msgs/sec
+received message {"p":5238,"c":98} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2916,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[104] push: 9296 msgs/sec, consume: 49 msgs/sec
+received message {"p":5141,"c":3086} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2916,"c":444} from worker 4
+received message {"p":5400,"c":0} from worker 3
+[105] push: 9299 msgs/sec, consume: 1765 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5300,"c":0} from worker 3
+[106] push: 9267 msgs/sec, consume: 0 msgs/sec
+received message {"p":5141,"c":14} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2970,"c":7755} from worker 4
+received message {"p":5100,"c":0} from worker 3
+[107] push: 9175 msgs/sec, consume: 3884 msgs/sec
+received message {"p":5141,"c":10638} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2970,"c":12151} from worker 4
+received message {"p":4896,"c":0} from worker 3
+[108] push: 9072 msgs/sec, consume: 11392 msgs/sec
+received message {"p":5141,"c":7881} from worker 2
+received message {"p":5141,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5184,"c":0} from worker 3
+[109] push: 9219 msgs/sec, consume: 3941 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":5238,"c":0} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":5184,"c":1} from worker 3
+[110] push: 9266 msgs/sec, consume: 1 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":5141,"c":18103} from worker 1
+received message {"p":5088,"c":6977} from worker 3
+received message {"p":2862,"c":0} from worker 4
+[111] push: 9098 msgs/sec, consume: 12515 msgs/sec
+received message {"p":5044,"c":1} from worker 2
+received message {"p":5141,"c":8642} from worker 1
+received message {"p":4893,"c":22199} from worker 3
+received message {"p":2808,"c":0} from worker 4
+[112] push: 8943 msgs/sec, consume: 15421 msgs/sec
+received message {"p":5141,"c":9443} from worker 2
+received message {"p":4812,"c":0} from worker 1
+received message {"p":4968,"c":0} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[113] push: 8943 msgs/sec, consume: 4720 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":3407,"c":0} from worker 1
+received message {"p":4968,"c":0} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[114] push: 8262 msgs/sec, consume: 0 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":2915,"c":0} from worker 1
+received message {"p":3482,"c":0} from worker 3
+received message {"p":2970,"c":21030} from worker 4
+[115] push: 7305 msgs/sec, consume: 10518 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":2915,"c":0} from worker 1
+received message {"p":3294,"c":0} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[116] push: 7161 msgs/sec, consume: 0 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":2915,"c":0} from worker 1
+received message {"p":3012,"c":0} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[117] push: 7018 msgs/sec, consume: 0 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":2915,"c":0} from worker 1
+received message {"p":2200,"c":1047} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[118] push: 6662 msgs/sec, consume: 524 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":2915,"c":23330} from worker 1
+received message {"p":2160,"c":0} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[119] push: 6569 msgs/sec, consume: 11669 msgs/sec
+received message {"p":5044,"c":0} from worker 2
+received message {"p":2915,"c":3037} from worker 1
+received message {"p":2240,"c":21920} from worker 3
+received message {"p":2862,"c":0} from worker 4
+[120] push: 6531 msgs/sec, consume: 12480 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":2915,"c":0} from worker 1
+received message {"p":2120,"c":24082} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[121] push: 6572 msgs/sec, consume: 12039 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":2887,"c":0} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[122] push: 6574 msgs/sec, consume: 0 msgs/sec
+received message {"p":5238,"c":223} from worker 2
+received message {"p":2329,"c":0} from worker 1
+received message {"p":2240,"c":0} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[123] push: 6363 msgs/sec, consume: 112 msgs/sec
+received message {"p":5141,"c":9223} from worker 2
+received message {"p":1779,"c":1734} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[124] push: 6018 msgs/sec, consume: 5479 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":1064,"c":3} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":2970,"c":17062} from worker 4
+[125] push: 5736 msgs/sec, consume: 8532 msgs/sec
+received message {"p":5238,"c":2304} from worker 2
+received message {"p":1045,"c":25116} from worker 1
+received message {"p":2160,"c":0} from worker 3
+received message {"p":2862,"c":2469} from worker 4
+[126] push: 5654 msgs/sec, consume: 14947 msgs/sec
+received message {"p":5141,"c":8339} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2240,"c":0} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[127] push: 5708 msgs/sec, consume: 4170 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2160,"c":0} from worker 3
+received message {"p":2862,"c":10337} from worker 4
+[128] push: 5616 msgs/sec, consume: 5171 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":1064,"c":5341} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":3024,"c":9177} from worker 4
+[129] push: 5715 msgs/sec, consume: 7260 msgs/sec
+received message {"p":5044,"c":0} from worker 2
+received message {"p":1083,"c":21227} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":2862,"c":0} from worker 4
+[130] push: 5594 msgs/sec, consume: 10611 msgs/sec
+received message {"p":5141,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2200,"c":5507} from worker 3
+received message {"p":2916,"c":0} from worker 4
+[131] push: 5660 msgs/sec, consume: 2754 msgs/sec
+received message {"p":5044,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2200,"c":28564} from worker 3
+received message {"p":2970,"c":0} from worker 4
+[132] push: 5638 msgs/sec, consume: 14279 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2916,"c":17923} from worker 4
+received message {"p":2200,"c":0} from worker 3
+[133] push: 5710 msgs/sec, consume: 8962 msgs/sec
+received message {"p":4947,"c":4573} from worker 2
+received message {"p":1045,"c":0} from worker 1
+received message {"p":2970,"c":28760} from worker 4
+received message {"p":2080,"c":0} from worker 3
+[134] push: 5517 msgs/sec, consume: 16652 msgs/sec
+received message {"p":5044,"c":12054} from worker 2
+received message {"p":1064,"c":4052} from worker 1
+received message {"p":2970,"c":0} from worker 4
+received message {"p":2200,"c":0} from worker 3
+[135] push: 5640 msgs/sec, consume: 8054 msgs/sec
+received message {"p":5238,"c":0} from worker 2
+received message {"p":1064,"c":33335} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":2754,"c":0} from worker 4
+[136] push: 5607 msgs/sec, consume: 16604 msgs/sec
+received message {"p":4947,"c":0} from worker 2
+received message {"p":1064,"c":59299} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":4732,"c":0} from worker 4
+[137] push: 6470 msgs/sec, consume: 29642 msgs/sec
+received message {"p":3121,"c":0} from worker 2
+received message {"p":1064,"c":20913} from worker 1
+received message {"p":2200,"c":18149} from worker 3
+received message {"p":5300,"c":0} from worker 4
+[138] push: 5841 msgs/sec, consume: 19524 msgs/sec
+received message {"p":2300,"c":219} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2200,"c":41839} from worker 3
+received message {"p":5200,"c":0} from worker 4
+[139] push: 5384 msgs/sec, consume: 21035 msgs/sec
+received message {"p":2530,"c":17669} from worker 2
+received message {"p":1026,"c":0} from worker 1
+received message {"p":2200,"c":0} from worker 3
+received message {"p":5200,"c":39} from worker 4
+[140] push: 5478 msgs/sec, consume: 8854 msgs/sec
+received message {"p":2530,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":2595,"c":0} from worker 3
+received message {"p":5100,"c":52046} from worker 4
+[141] push: 5629 msgs/sec, consume: 25949 msgs/sec
+received message {"p":2530,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":4782,"c":0} from worker 3
+received message {"p":5400,"c":16820} from worker 4
+[142] push: 6892 msgs/sec, consume: 8414 msgs/sec
+received message {"p":2484,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":4968,"c":7348} from worker 3
+received message {"p":5300,"c":0} from worker 4
+[143] push: 6908 msgs/sec, consume: 3674 msgs/sec
+received message {"p":4223,"c":0} from worker 2
+received message {"p":1064,"c":0} from worker 1
+received message {"p":4876,"c":51181} from worker 3
+received message {"p":5200,"c":0} from worker 4
+[144] push: 7684 msgs/sec, consume: 25597 msgs/sec

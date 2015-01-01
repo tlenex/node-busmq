@@ -9,11 +9,12 @@ process.on('uncaughtException', function (err) {
 });
 
 var message = new Buffer(config.message);
+var pushback = 35;
+
 
 // -- state
 var producers = [];
 var consumers = [];
-
 
 // -- create the bus
 var amqp = require('amqplib/callback_api');
@@ -130,7 +131,7 @@ function pump(p) {
   function push() {
     if (p.sendToQueue(p.qName, message)) {
       ++totalPushed;
-      setTimeout(push, 0);
+      setTimeout(push, pushback);
     }
   }
   push();
