@@ -129,6 +129,7 @@ function reportBenchmark() {
 function pump(p) {
   function push() {
     if (p.sendToQueue(p.qName, message)) {
+      ++totalPushed;
       setTimeout(push, 0);
     }
   }
