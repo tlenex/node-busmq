@@ -8,6 +8,8 @@ process.on('uncaughtException', function (err) {
   console.log('Caught exception: ' + ((err instanceof Error) ? err.stack : err));
 });
 
+var message = new Buffer(config.message);
+
 // -- state
 var producers = [];
 var consumers = [];
@@ -126,7 +128,7 @@ function reportBenchmark() {
 // -- pump messages on a producer
 function pump(p) {
   function push() {
-    if (p.sendToQueue(p.qName, config.message)) {
+    if (p.sendToQueue(p.qName, message)) {
       setTimeout(push, 0);
     }
   }
