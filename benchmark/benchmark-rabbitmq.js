@@ -8,8 +8,10 @@ process.on('uncaughtException', function (err) {
   console.log('Caught exception: ' + ((err instanceof Error) ? err.stack : err));
 });
 
-// -- state variables
-var message = new Buffer(config.message);
+// -- state
+var producers = [];
+var consumers = [];
+
 
 // -- create the bus
 var amqp = require('amqplib/callback_api');
@@ -29,17 +31,19 @@ amqp.connect(config.urls, function(err, con) {
   setupBenchmark();
 });
 
+
 // -- setup the benchmark
 function setupBenchmark() {
   for (var i = 0; i < config.numQueues; ++i) {
     setupQueue(i);
-  };
+  }
 }
+
 
 // -- setup queues
 var queuesReady = 0;
-var queuesDone = 0;
-var producers = [];
+var totalConsumed = 0;
+var totalPushed = 0;
 function setupQueue(i) {
   var pqName = 'w'+((workerId+1) % config.numWorkers)+'-q'+i;
   var cqName = 'w'+(workerId % config.numWorkers)+'-q'+i;
@@ -49,7 +53,6 @@ function setupQueue(i) {
     }
     c.assertQueue(cqName);
     c.qName = cqName;
-    c.consumed = 0;
     c.on('close', function() {
       logger.debug('consumer CLOSE');
     });
@@ -63,7 +66,6 @@ function setupQueue(i) {
       producers.push(p);
       p.assertQueue(pqName);
       p.qName = pqName;
-      p.pumped = 0;
       p.on('close', function() {
         logger.debug('producer CLOSE');
       });
@@ -71,20 +73,17 @@ function setupQueue(i) {
         logger.debug('producer ERROR' + err);
       });
       p.on('drain', function() {
-        pump(p);
+        setTimeout(function() {
+          pump(p);
+        }, 0)
       });
 
       c.consume(c.qName, function(m) {
-        if (++c.consumed === config.numMessages) {
-          c.consumed = 0;
-          if (++queuesDone === config.numQueues) {
-            queuesDone = 0;
-            reportBenchmark();
-          }
-        }
+        ++totalConsumed;
       });
 
       if (++queuesReady === config.numQueues) {
+        // all producers and consumers are ready
         readyBenchmark();
       }
     });
@@ -93,36 +92,43 @@ function setupQueue(i) {
 
 // -- start the benchmark
 function readyBenchmark() {
-  process.on('message', function(message) {
-    switch (message) {
-      case 'start':
-        producers.forEach(function(p) {
-          pump(p);
-        });
-        break;
-    }
-  })
-  process.send('ready');
+  if (cluster.isWorker) {
+    process.on('message', function(message) {
+      switch (message) {
+        case 'start':
+          startBenchmark();
+          break;
+      }
+    })
+    process.send('ready');
+  } else {
+    startBenchmark()
+  }
+}
+
+function startBenchmark() {
+  producers.forEach(function(p) {
+    pump(p);
+  });
+  setInterval(reportBenchmark, 2000);
 }
 
 function reportBenchmark() {
-  process.send('report');
-
-//  producers.forEach(function(p) {
-//    p.detach();
-//  });
-//  consumers.forEach(function(c) {
-//    c.detach();
-//  });
+  if (cluster.isWorker) {
+    var pushed = totalPushed;
+    var consumed = totalConsumed;
+    totalPushed = 0;
+    totalConsumed = 0;
+    process.send(JSON.stringify({p: pushed, c: consumed}));
+  }
 }
 
 // -- pump messages on a producer
 function pump(p) {
   function push() {
     if (p.sendToQueue(p.qName, message)) {
-      return setTimeout(push, 0);
+      setTimeout(push, 0);
     }
-    p.pumped = 0;
   }
   push();
 }

@@ -50,7 +50,6 @@ function setupQueue(i) {
   p.on('closed', function() {
   });
   p.on('drain', function() {
-//    console.log(p.id + ' DRAIN');
     setTimeout(function() {
       pump(p);
     }, 0)
