@@ -650,6 +650,7 @@ describe('Bus', function() {
           var c = bus.queue(qName);
           c.on('error', done);
           c.on('message', function(message, id) {
+            console.log('--- message id = ' + id)
             ++consumed;
             lastMessage = message;
             // ack the first and second messages
