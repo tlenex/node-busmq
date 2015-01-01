@@ -419,7 +419,7 @@ bus.on('online', function() {
 
 ## Performance
 
-Performance wa measured with two key indicators in mind:
+Performance was measured with two key indicators in mind:
 
 * Message Throughput - the number of messages per second that can be pushed and consumed from a queue
 * Message Throughout Consistency - the consistency of the throughput over time
@@ -444,10 +444,10 @@ The benchmark flow is as follows:
 * start up 4 node processes (one per cpu)
 * on startup, the node process creates 100 queues
 * once all the nodes of all the processes have been created, every process performs:
-** initiate a report cycle of 2 seconds
-** push/consume 32 byte messages as fast as possible to/from all queues
-** report the number of pushed and consumed messages per cycle
-** reset the pushed and consumed message counters at the end of every cycle
+  * initiate a report cycle of 2 seconds
+  * push/consume 32 byte messages as fast as possible to/from all queues
+  * report the number of pushed and consumed messages per cycle
+  * reset the pushed and consumed message counters at the end of every cycle
 * run a total of 100 cycles
 
 #### Results
