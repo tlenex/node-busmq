@@ -627,6 +627,51 @@ describe('Bus', function() {
       bus.connect();
     });
 
+    it('should not receive additional messages if stop was called', function(done) {
+      var consumed = 0;
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test'+Math.random();
+        // create producer
+        var p = bus.queue(qName);
+        p.on('error', done);
+        p.on('attached', function() {
+          var c = bus.queue(qName);
+          c.on('error', done);
+          c.on('attached', function(exists) {
+            exists.should.be.exactly(true);
+          });
+          c.on('message', function(message, id) {
+            ++consumed;
+            message.should.be.exactly('1');
+            c.stop();
+          });
+          c.on('consuming', function(state) {
+            state.should.be.exactly(consumed === 0);
+            if (!state) {
+              c.detach();
+            }
+          });
+          c.on('detached', function() {
+            p.detach();
+            bus.disconnect();
+          });
+          c.attach();
+          c.consume();
+        });
+        p.attach({ttl: 1});
+        p.push('1');
+        p.push('2');
+        p.push('3');
+      });
+      bus.on('offline', function() {
+        consumed.should.be.exactly(1);
+        done();
+      });
+      bus.connect();
+    });
+
     it('consume reliable', function(done) {
       var consumed = 0;
       var bus = Bus.create({redis: redisUrls, logger: console});
