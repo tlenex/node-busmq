@@ -18,6 +18,27 @@ Message queues are backed by [Redis](http://redis.io/), a high performance, in-m
 * Tolerance to dynamic addition of redis instances during scale out
 * Fast
 
+### Why Yet Another "Queue-Backed-by-Redis" Module?
+
+There are several exiting node modules that provide great queues-backed-by-redis functionality,
+such as [Kue](https://github.com/learnboost/kue), [Bull](https://github.com/OptimalBits/bull) and
+[Convoy](https://github.com/gosquared/convoy), so what's so special about busmq?
+
+Although seemingly the other modules provide similar features, they lack a very specific feature that's required
+for a reliable message queue: guaranteed order. *Jobs* is the main focus for these modules, whereas busmq focuses on
+*messages*.
+
+Inherently, job processing does not require a certain order - if a job fails it can simply be retried
+at a later time with (usually) no ill-effects. However, message processing is very order dependant - if you receive a message
+out of order then there's no telling what the consequences may be. A good example is
+[TCP message order importance](http://en.wikipedia.org/wiki/Out-of-order_delivery) - clients are guaranteed
+that TCP packets are *always* received in the correct order. That's what busmq focuses on, which makes busmq much
+more like [RabbitMQ](http://www.rabbitmq.com/) rather than a generic queueing system.
+
+Of course, the other modules may double as messages queues, but that's just not their main focus. In addition, busmq
+provides built-in features for peer-to-peer communication, scaling, high-availability and federation which are extremely important for a reliable
+messaging system.
+
 ### High Availability and Scaling
 
 Scaling is achieved by spreading queues and channels between multiple redis instances.
