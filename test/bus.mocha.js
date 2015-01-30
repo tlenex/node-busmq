@@ -5,7 +5,7 @@ var Bus = require('../lib/bus');
 
 var fedserver;
 
-var redisPorts = [9888];
+var redisPorts = [9888,9889];
 var redisUrls = [];
 redisPorts.forEach(function(port) {
   redisUrls.push('redis://127.0.0.1:'+port);
@@ -14,7 +14,7 @@ redisPorts.forEach(function(port) {
 var redises = [];
 
 function redisStart(port, done) {
-  console.log('<starting redis>');
+  console.log('<starting redis on port ' + port + '>');
   var redis = redisHelper.open(port);
   redises.push(redis);
   redis.on('error', function(err) {
@@ -107,7 +107,7 @@ describe('Bus', function() {
       bus.connect();
     });
 
-    it('should emit offline when redis goes down, and online when it\'s back again', function(done) {
+    it('should emit offline when the redises go down, and online when they are back again', function(done) {
       var bus = Bus.create({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
@@ -116,6 +116,7 @@ describe('Bus', function() {
         ++onlines;
         if (onlines === 1) {
           redisStop(redises[0], function() {});
+          redisStop(redises[1], function() {});
         } else if (onlines === 2) {
           bus.disconnect();
         } else {
@@ -126,6 +127,7 @@ describe('Bus', function() {
         ++offlines;
         if (offlines === 1) {
           redisStart(redisPorts[0], function(){});
+          redisStart(redisPorts[1], function(){});
         } else if (offlines === 2) {
           done();
         } else {
