@@ -342,10 +342,11 @@ using the awesome [dnode](https://github.com/substack/dnode) module for RPCing t
 ```javascript
 var http = require('http');
 var httpServer = http.createServer(); // create the http server to serve as the federation server. you can also use express if you like...
+httpServer.listen(8881);
 var Bus = require('busmq');
 var options = {
-  redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: {
+  redis: 'redis://127.0.0.1', // connect this bus to a local running redis
+  federate: { // also open a federation server
     server: httpServer,  // use the provided http server as the federation server
     secret: 'mysecret',   // a secret key for authorizing clients
     path: '/my/fed/path'
@@ -364,9 +365,9 @@ bus.connect();
 var Bus = require('busmq');
 var options = {
   redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: {
+  federate: { // also connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
     secret: 'mysecret',  // the secret ket to authorize with the federation server
     path: '/my/fed/path'
   }
@@ -390,10 +391,10 @@ bus.on('online', function() {
 ```javascript
 var Bus = require('busmq');
 var options = {
-  redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: {
+  redis: 'redis://127.0.0.1', // connect this bus to a local running redis
+  federate: { // also connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
     secret: 'mysecret',  // the secret ket to authorize with the federation server
     path: '/my/fed/path'
   }
@@ -418,9 +419,9 @@ bus.on('online', function() {
 var Bus = require('busmq');
 var options = {
   redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: {
+  federate: { // also connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://127.0.0.1:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
     secret: 'mysecret',  // the secret ket to authorize with the federation server
     path: '/my/fed/path'
   }
@@ -443,7 +444,7 @@ bus.on('online', function() {
 Performance was measured with two key indicators in mind:
 
 * Message Throughput - the number of messages per second that can be pushed and consumed from a queue
-* Message Throughout Consistency - the consistency of the throughput over time
+* Message Throughout Consistency - how consistent the throughput is over time
 
 There is also a third indicator that might be interesting to examine and that is "Queue Open/Close Throughout".
 I'm pretty sure there's place for improvement there, so no benchmarking was performed in that area.
@@ -455,7 +456,7 @@ Each machine has 4 Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz and 7.5GB of RAM.
 
 One machine was setup to run 4 instances of redis 2.8.19. Redis is single threaded so it can only utilize one CPU.
 
-A Second machine was setup to run 4 node busmq processes executing the benchmarking code.
+A second machine was setup to run 4 node busmq processes executing the benchmarking code.
 Each one of the 4 node processes connected to all of the 4 redis instances running on the first machine.
 
 #### Benchmark
@@ -498,7 +499,7 @@ Create a new bus instance. Options:
 
 * `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
-  * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open. Do not perform listen - the bus will do it for you.
+  * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open
   * `path` - the path within the server to accept federation requests on
   * `urls` - an array of urls of the form `http[s]://<ip-or-host>[:port]` of other bus instances that this bus can federate to. default is an empty array.
   * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
