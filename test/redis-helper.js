@@ -2,6 +2,7 @@
 
 var util = require('util');
 var events = require('events');
+var redis = require('redis');
 
 var childProcess = require('child_process')
   , keyRE = /(port:\s+\d+)|(pid:\s+\d+)|(already\s+in\s+use)|(not\s+listen)|error|denied|(server\s+is\s+now\s+ready)/ig
@@ -53,6 +54,7 @@ RedisHelper.prototype.open = function() {
 
       case 'serverisnowready':
         self.isOpening = false;
+        self.client = redis.createClient(self.port, '127.0.0.1');
         return self.emit('ready');
 
       case 'pid':
@@ -86,6 +88,14 @@ RedisHelper.prototype.open = function() {
   });
 
   return true;
+};
+
+RedisHelper.prototype.slaveOf = function(port, callback) {
+  if (port) {
+    this.client.slaveof('127.0.0.1', port, callback);
+  } else {
+    this.client.slaveof('no', 'one', callback);
+  }
 };
 
 RedisHelper.prototype.close = function(callback) {

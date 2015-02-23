@@ -1,4 +1,5 @@
 var http = require('http');
+var _url = require('url');
 var Should = require('should');
 var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
@@ -9,7 +10,7 @@ var redisPorts = [9888,9889];
 var redisUrls = [];
 redisPorts.forEach(function(port) {
   redisUrls.push('redis://127.0.0.1:'+port);
-})
+});
 
 var redises = [];
 
@@ -34,6 +35,23 @@ function redisStop(redis, done) {
     done();
   });
 }
+
+function redisMakeSlaveOf(redis1, redis2, done) {
+  if (redis2) {
+    console.log('<changing redis ' + redis1.port + ' to slave of ' + redis2.port + '>');
+    redis1.slaveOf(redis2.port, function(err) {
+      console.log('<redis is now slave>');
+      done();
+    });
+  } else {
+    console.log('<changing redis ' + redis1.port + ' to master>');
+    redis1.slaveOf(null, function(err) {
+      console.log('<redis is now master>');
+      done();
+    });
+  }
+}
+
 
 describe('Bus', function() {
 
@@ -133,6 +151,32 @@ describe('Bus', function() {
         } else {
           done('too many offline events');
         }
+      });
+      bus.connect();
+    });
+
+    it('should resume silently when redis turns into slave and turns back to master', function(done) {
+      var online = false;
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', function(){});
+      bus.on('online', function() {
+        if (!online) {
+          online = true;
+          redisMakeSlaveOf(redises[0], redises[1], function() {
+            var q = bus.queue('test');
+            q.on('attached', function() {
+              q.detach();
+              bus.disconnect();
+            });
+            q.attach();
+            setTimeout(function() {
+              redisMakeSlaveOf(redises[0], null, function() {});
+            }, 100);
+          });
+        }
+      });
+      bus.on('offline', function() {
+        done();
       });
       bus.connect();
     })
@@ -1251,10 +1295,10 @@ describe('Bus', function() {
                     Should(p.f1).equal('v2');
                     Should(p.f2).equal(2);
                     Should(p.f3).equal(true);
+                    f.close();
                   });
                 });
               });
-              f.close();
             });
           });
           f.on('close', function() {
