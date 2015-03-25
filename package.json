@@ -4,7 +4,7 @@
   "description": "A high performance, highly-available and scalable, message bus and queueing system for node.js backed by Redis",
   "author": "Capriza Inc. <backend@capriza.com>",
   "maintainers": [
-    "Nadav Fischer <nadav.fischer@capriza.com>"
+    "Nadav Fischer <fujifischer@gmail.com>"
   ],
   "homepage": "http://github.com/capriza/node-busmq",
   "repository" : { "type" : "git" , "url" : "http://github.com/capriza/node-busmq.git" },
@@ -14,7 +14,7 @@
   "keywords": ["bus", "message", "queue", "mq", "channel", "federation", "redis", "reliable", "guarantee"],
   "dependencies": {
     "redis": "0.12.1",
-    "hiredis": "0.1.17"
+    "hiredis": "0.2.0"
   },
   "optionalDependencies": {
     "ws": "0.4.32",
