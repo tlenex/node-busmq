@@ -1,3 +1,5 @@
+![busmq logo](/busmq-logo.png)
+
 # node-busmq
 
 ![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)
