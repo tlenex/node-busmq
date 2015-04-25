@@ -1,7 +1,5 @@
 ![busmq logo](/busmq-logo.png)
 
-# node-busmq
-
 ![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)
 
 A high performance, highly available and scalable, message bus and queueing system for node.js.
