@@ -6,7 +6,7 @@ var Bus = require('../lib/bus');
 
 var fedserver;
 
-var redisPorts = [9888,9889];
+var redisPorts = [9888,9889,9890,9891];
 var redisUrls = [];
 redisPorts.forEach(function(port) {
   redisUrls.push('redis://127.0.0.1:'+port);
@@ -53,34 +53,158 @@ function redisMakeSlaveOf(redis1, redis2, done) {
 }
 
 
+function startAllRedises(cb) {
+  console.log('<starting all redises>');
+  var dones = 0;
+  for (var i = 0; i < redisPorts.length; ++i) {
+    redisStart(redisPorts[i], function() {
+      if (++dones === redisPorts.length) {
+        cb && cb();
+      }
+    });
+  }
+}
+
+function stopAllRedises(cb) {
+  console.log('<stopping all redises>');
+  var dones = 0;
+  for (var i = 0; i < redisPorts.length; ++i) {
+    redisStop(redises[i], function() {
+      if (++dones === redisPorts.length) {
+        cb && cb();
+      }
+    });
+  }
+}
+
+function produceAndConsume(bus, messages, queues, cb) {
+  function qDone() {
+    if (--queues === 0) {
+      cb();
+    }
+  }
+
+  for (var i = 0;i < queues; ++i) {
+    (function() {
+      var qName = 'test-'+i+'-'+Math.random();
+      var testMessage = 'message-'+i;
+      // create producer
+      var p = bus.queue(qName);
+      p.on('error', cb);
+      p.on('detached', function() {
+      });
+      p.on('attached', function() {
+        // create the consumer
+        var c = bus.queue(qName);
+        c.on('error', cb);
+        c.on('message', function(message) {
+          message.should.be.exactly(testMessage);
+          if (c.consumed() === messages) {
+            c.detach();
+          }
+        });
+        c.on('detached', function() {
+          qDone();
+        });
+        c.on('attached', function() {
+          // consume all messages
+          c.consume();
+        });
+        c.attach();
+
+        // push messages
+        var interval = setInterval(function() {
+          do {
+            p.push(testMessage);
+            if (p.pushed() === messages) {
+              clearInterval(interval);
+              p.detach();
+            }
+          } while (p.isAttached() && p.pushed() % 20 !== 0)
+        }, 0);
+      });
+      p.attach();
+    })();
+  }
+}
+
+function produceAndConsumeOverFederation(pBus, cBus, fedTo, messages, queues, cb) {
+  function qDone() {
+    if (--queues === 0) {
+      cb();
+    }
+  }
+
+  for (var i = 0; i < queues; ++i) {
+    (function() {
+      var qName = 'test-'+i+'-'+Math.random();
+      var testMessage = 'message-'+i;
+      // create producer
+      var pFed = pBus.federate(pBus.queue(qName), fedTo);
+      pFed.on('error', cb);
+      pFed.on('unauthorized', function() {
+        cb('unauthorized')
+      });
+      pFed.on('close', function() {
+        qDone();
+      });
+      pFed.on('ready', function(p) {
+        p.on('error', cb);
+        p.on('detached', function() {
+        });
+        p.on('attached', function() {
+          // create the consumer
+          var c = cBus.queue(qName);
+          c.on('error', cb);
+          c.on('message', function(message) {
+            message.should.be.exactly(testMessage);
+            if (c.consumed() === messages) {
+              c.detach();
+            }
+          });
+          c.on('detached', function() {
+            pFed.close();
+          });
+          c.on('attached', function() {
+            // consume all messages
+            c.consume();
+          });
+          c.attach();
+
+          // push messages
+          var pushed = 0;
+          var interval = setInterval(function() {
+            do {
+              p.push(testMessage);
+              if (++pushed === messages) {
+                clearInterval(interval);
+                p.detach();
+              }
+            } while (p.isAttached() && p.pushed() % 20 !== 0)
+          }, 0);
+        });
+        p.attach();
+      });
+    })();
+  }
+}
+
+
 describe('Bus', function() {
 
+  this.timeout(0);
   if (this.timeout() === 0) {
     this.enableTimeouts(false);
   }
 
   // start the redis servers
   before(function(done) {
-    var dones = 0;
-    for (var i = 0; i < redisPorts.length; ++i) {
-      redisStart(redisPorts[i], function() {
-        if (++dones === redisPorts.length) {
-          done();
-        }
-      });
-    }
+    startAllRedises(done);
   });
 
   // stop all redis servers
   after(function(done) {
-    var dones = 0;
-    for (var i = 0; i < redisPorts.length; ++i) {
-      redisStop(redises[i], function() {
-        if (++dones === redisPorts.length) {
-          done();
-        }
-      });
-    }
+    stopAllRedises(done);
   });
 
   describe('bus connection', function() {
@@ -109,7 +233,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         if (++onlines === 1) {
-          bus.connect('redis://127.0.0.1:9888');
+          bus.connect('redis://127.0.0.1:'+redisPorts[0]);
         } else {
           done('online should not have been called twice');
         }
@@ -129,12 +253,22 @@ describe('Bus', function() {
       var bus = Bus.create({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
+      var allStopped= false;
+
+      function startAll() {
+        if (offlines === 1 && allStopped) {
+          startAllRedises();
+        }
+      }
+
       bus.on('error', function(){});
       bus.on('online', function() {
         ++onlines;
         if (onlines === 1) {
-          redisStop(redises[0], function() {});
-          redisStop(redises[1], function() {});
+          stopAllRedises(function() {
+            allStopped = true;
+            startAll();
+          });
         } else if (onlines === 2) {
           bus.disconnect();
         } else {
@@ -144,8 +278,7 @@ describe('Bus', function() {
       bus.on('offline', function() {
         ++offlines;
         if (offlines === 1) {
-          redisStart(redisPorts[0], function(){});
-          redisStart(redisPorts[1], function(){});
+          startAll();
         } else if (offlines === 2) {
           done();
         } else {
@@ -156,30 +289,34 @@ describe('Bus', function() {
     });
 
     it('should resume silently when redis turns into slave and turns back to master', function(done) {
-      var online = false;
+      var online = 0;
+      var offline = 0;
       var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', function(){});
       bus.on('online', function() {
-        if (!online) {
+        ++online;
+        if (online === 1) {
           online = true;
           redisMakeSlaveOf(redises[0], redises[1], function() {
             var q = bus.queue('test');
             q.on('attached', function() {
-              q.detach();
-              bus.disconnect();
+              setTimeout(function() {
+                q.detach();
+                redisMakeSlaveOf(redises[0], null, function() {
+                  bus.disconnect();
+                });
+              }, 100);
             });
             q.attach();
-            setTimeout(function() {
-              redisMakeSlaveOf(redises[0], null, function() {});
-            }, 100);
           });
         }
       });
       bus.on('offline', function() {
+        console.log('-- test is done');
         done();
       });
       bus.connect();
-    })
+    });
   });
 
   describe('queues', function() {
@@ -517,6 +654,40 @@ describe('Bus', function() {
         });
         bus.connect();
       });
+
+      function testManyMessages(messages, queues, done) {
+        var bus = Bus.create({redis: redisUrls, logger: console});
+        bus.on('error', done);
+        bus.on('online', function() {
+          var time = process.hrtime();
+          produceAndConsume(bus, messages, queues, function(err) {
+            if (err) {
+              done(err);
+              return;
+            }
+            var diff = process.hrtime(time);
+            console.log('produces and consumes '+messages+' messages in '+queues+' queues took %d milliseconds', (diff[0] * 1e9 + diff[1]) / 1000000);
+            bus.disconnect();
+          });
+        });
+        bus.on('offline', function() {
+          done();
+        });
+        bus.connect();
+      }
+
+      it('produces and consumes 10 messages in 10 queues', function(done) {
+        testManyMessages(10, 10, done);
+      });
+
+      it('produces and consumes 100 messages in 10 queues', function(done) {
+        testManyMessages(100, 10, done);
+      });
+
+      it('produces and consumes 100 messages in 100 queues', function(done) {
+        testManyMessages(100, 100, done);
+      });
+
     });
 
     it('consume max', function(done) {
@@ -1120,6 +1291,60 @@ describe('Bus', function() {
       });
       bus.connect();
     });
+
+    function testManySavesAndLoades(objects, done) {
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        function _done() {
+          if (--objects === 0) {
+            bus.disconnect();
+          }
+        }
+
+        for (var iObject = 0; iObject < objects; ++iObject) {
+          (function(i) {
+            var name = 'data'+i;
+            var object = bus.persistify(name, {}, ['field1', 'field2', 'field3']);
+            object.field1 = 'val'+i;
+            object.field2 = 2;
+            object.field3 = true;
+            object.save(function(err) {
+              Should(err).equal(undefined);
+              object.field1 = 'val2'+i;
+              object.save(function(err) {
+                Should(err).equal(undefined);
+                var object2 = bus.persistify(name, {}, ['field1', 'field2', 'field3']);
+                object2.load(function(err, exists) {
+                  Should(err).equal(null);
+                  exists.should.be.exactly(true);
+                  Should(object2.field1).equal('val2'+i);
+                  Should(object2.field2).equal(2);
+                  Should(object2.field3).equal(true);
+                  _done();
+                })
+              });
+            });
+          })(iObject);
+        }
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    }
+
+    it('persists 10 objects', function(done) {
+      testManySavesAndLoades(10, done);
+    });
+
+    it('persists 100 objects', function(done) {
+      testManySavesAndLoades(100, done);
+    });
+
+    it('persists 1000 objects', function(done) {
+      testManySavesAndLoades(1000, done);
+    });
   });
 
   describe('federation', function() {
@@ -1333,13 +1558,12 @@ describe('Bus', function() {
           var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777');
           f.on('error', done);
           f.on('unauthorized', function() {
-            f.close();
+            busFed.disconnect();
           });
           f.on('ready', function() {
             done('ready should not have been called')
           });
           f.on('close', function() {
-            busFed.disconnect();
           });
         });
         busFed.on('offline', function() {
@@ -1353,5 +1577,120 @@ describe('Bus', function() {
       });
       bus.connect();
     });
+
+    function testManyMessagesOverFederation(messages, queues, done) {
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 10 }});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var time = process.hrtime();
+          produceAndConsumeOverFederation(busFed, bus, 'http://127.0.0.1:9777/federate', messages, queues, function(err) {
+            if (err) {
+              done(err);
+              return;
+            }
+            var diff = process.hrtime(time);
+            console.log('produces and consumes '+messages+' messages in '+queues+' queues over federation took %d milliseconds', (diff[0] * 1e9 + diff[1]) / 1000000);
+            busFed.disconnect();
+          });
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    }
+
+    it('produces and consumes 10 messages in 10 queues over federation', function(done) {
+      testManyMessagesOverFederation(10, 10, done);
+    });
+
+    it('produces and consumes 100 messages in 10 queues over federation', function(done) {
+      testManyMessagesOverFederation(100, 10, done);
+    });
+
+    it('produces and consumes 100 messages in 100 queues over federation', function(done) {
+      testManyMessagesOverFederation(100, 100, done);
+    });
+
+    function testManySavesAndLoadesOverFederation(objects, done) {
+      var total = objects;
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 10 }});
+        busFed.on('error', done);
+        busFed.on('online', function() {
+
+          var time = process.hrtime();
+          function _done() {
+            if (--objects === 0) {
+              var diff = process.hrtime(time);
+              console.log('persist ' + total +' objects over federation took %d milliseconds', (diff[0] * 1e9 + diff[1]) / 1000000);
+              busFed.disconnect();
+            }
+          }
+
+          for (var iObject = 0; iObject < objects; ++iObject) {
+            (function(i) {
+              var name = 'data'+i;
+              var object = bus.persistify(name, {}, ['field1', 'field2', 'field3']);
+              object.field1 = 'val'+i;
+              object.field2 = 2;
+              object.field3 = true;
+              object.save(function(err) {
+                Should(err).equal(undefined);
+                var fedObj = busFed.federate(busFed.persistify(name, {}, ['field1', 'field2', 'field3']), 'http://127.0.0.1:9777/federate');
+                fedObj.on('ready', function(obj) {
+                  obj.load(function(err, exists) {
+                    Should(err).equal(null);
+                    exists.should.be.exactly(true);
+                    Should(obj.field1).equal('val'+i);
+                    Should(obj.field2).equal(2);
+                    Should(obj.field3).equal(true);
+                    fedObj.close();
+                  });
+                });
+                fedObj.on('error', done);
+                fedObj.on('close', function() {
+                  _done();
+                });
+              });
+            })(iObject);
+          }
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
+      });
+
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    }
+
+    it('persists 10 objects over federation', function(done) {
+      testManySavesAndLoadesOverFederation(10, done);
+    });
+
+    it('persists 100 objects over federation', function(done) {
+      testManySavesAndLoadesOverFederation(100, done);
+    });
+
   });
 });
