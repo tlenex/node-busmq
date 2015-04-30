@@ -1520,8 +1520,11 @@ describe('Bus', function() {
                     Should(p.f1).equal('v2');
                     Should(p.f2).equal(2);
                     Should(p.f3).equal(true);
-                    f.close();
+                    f2.close();
                   });
+                });
+                f2.on('close', function() {
+                  f.close();
                 });
               });
             });
@@ -1631,7 +1634,7 @@ describe('Bus', function() {
       bus.on('error', done);
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 10 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: objects/2 }});
         busFed.on('error', done);
         busFed.on('online', function() {
 
@@ -1690,6 +1693,10 @@ describe('Bus', function() {
 
     it('persists 100 objects over federation', function(done) {
       testManySavesAndLoadesOverFederation(100, done);
+    });
+
+    it('persists 200 objects over federation', function(done) {
+      testManySavesAndLoadesOverFederation(200, done);
     });
 
   });
