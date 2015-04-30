@@ -736,14 +736,14 @@ Returns `true` if connected to the channel, `false` if not connected.
 
 Save all the dirty properties. The dirty properties are marked as not dirty after the save completes.
 
-* `callback` - called when the save has finished. has the form `function(err)`.
+* `callback` - called when the save has finished. has the form `function(err, id)` where `id` is the object id that was saved.
 
 ##### persistable#load(callback)
 
 Load all the tracked properties. All properties are marked as not dirty after the load completes.
 
-* `callback`  - called when the load has finished. has the form `function(err, exists)`
-where `exists` is true if the persisted object was found in the bus.
+* `callback`  - called when the load has finished. has the form `function(err, exists, id)`
+where `exists` is true if the persisted object was found in the bus and `id` is the id of the object whose data was searched.
 
 ##### persistable#persist(ttl)
 

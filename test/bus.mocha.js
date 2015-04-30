@@ -1270,10 +1270,10 @@ describe('Bus', function() {
         object.field2 = 2;
         object.field3 = true;
         object.save(function(err) {
-          Should(err).equal(undefined);
+          Should(err).equal(null);
           object.field1 = 'val2';
           object.save(function(err) {
-            Should(err).equal(undefined);
+            Should(err).equal(null);
             var object2 = bus.persistify('data1', {}, ['field1', 'field2', 'field3']);
             object2.load(function(err, exists) {
               Should(err).equal(null);
@@ -1309,14 +1309,17 @@ describe('Bus', function() {
             object.field1 = 'val'+i;
             object.field2 = 2;
             object.field3 = true;
-            object.save(function(err) {
-              Should(err).equal(undefined);
+            object.save(function(err, key) {
+              Should(err).equal(null);
+              Should(key).equal(object.id);
               object.field1 = 'val2'+i;
-              object.save(function(err) {
-                Should(err).equal(undefined);
+              object.save(function(err, key) {
+                Should(err).equal(null);
+                Should(key).equal(object.id);
                 var object2 = bus.persistify(name, {}, ['field1', 'field2', 'field3']);
-                object2.load(function(err, exists) {
+                object2.load(function(err, exists, key) {
                   Should(err).equal(null);
+                  Should(key).equal(object.id);
                   exists.should.be.exactly(true);
                   Should(object2.field1).equal('val2'+i);
                   Should(object2.field2).equal(2);
@@ -1503,20 +1506,23 @@ describe('Bus', function() {
             p.f1 = 'v1';
             p.f2 = 2;
             p.f3 = true;
-            p.save(function(err) {
-              Should(err).equal(undefined);
+            p.save(function(err, key) {
+              Should(err).equal(null);
+              Should(key).equal(p.id);
               p.f1 = 'v2';
-              p.save(function(err) {
-                Should(err).equal(undefined);
+              p.save(function(err, key) {
+                Should(err).equal(null);
+                Should(key).equal(p.id);
                 var f2 = busFed.federate(busFed.persistify('p1', {}, ['f1', 'f2', 'f3']), 'http://127.0.0.1:9777');
                 f2.on('error', done);
                 f2.on('unauthorized', function() {
                   done('unauthorized')
                 });
                 f2.on('ready', function(p) {
-                  p.load(function(err, exist) {
+                  p.load(function(err, exist, key) {
                     Should(err).equal(null);
                     Should(exist).equal(true);
+                    Should(key).equal(p.id);
                     Should(p.f1).equal('v2');
                     Should(p.f2).equal(2);
                     Should(p.f3).equal(true);
@@ -1654,13 +1660,15 @@ describe('Bus', function() {
               object.field1 = 'val'+i;
               object.field2 = 2;
               object.field3 = true;
-              object.save(function(err) {
-                Should(err).equal(undefined);
+              object.save(function(err, key) {
+                Should(err).equal(null);
+                Should(key).equal(object.id);
                 var fedObj = busFed.federate(busFed.persistify(name, {}, ['field1', 'field2', 'field3']), 'http://127.0.0.1:9777/federate');
                 fedObj.on('ready', function(obj) {
-                  obj.load(function(err, exists) {
+                  obj.load(function(err, exists, key) {
                     Should(err).equal(null);
                     exists.should.be.exactly(true);
+                    Should(key).equal(object.id);
                     Should(obj.field1).equal('val'+i);
                     Should(obj.field2).equal(2);
                     Should(obj.field3).equal(true);
