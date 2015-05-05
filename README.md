@@ -65,7 +65,7 @@ achieve the best performance.
 
 ```javascript
 var Bus = require('busmq');
-var bus = Bus.create({redis: ['redis://192.168.0.1:6359', 'redis://192.168.0.2:6359']);
+var bus = Bus.create({redis: ['redis://192.168.0.1:6379', 'redis://192.168.0.2:6379']);
 bus.on('error', function(err) {
   // an error has occurred
 });
@@ -97,11 +97,13 @@ The queue will remain in existence for as long as it has at least one client att
 To stop using a queue, detach from it. Once a queue has no more clients attached, it will automatically expire
 after a predefined ttl (also losing any messages in it).
 
-#### Using a queue
+#### Using a queue 
 
 Producer:
 
 ```javascript
+var Bus = require('busmq');
+var bus = Bus.create({redis: ['redis://127.0.0.1:6379']});
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -111,11 +113,14 @@ bus.on('online', function() {
   q.push({hello: 'world'});
   q.push('my name if foo');
 });
+bus.connect();
 ```
 
 Consumer:
 
 ```javascript
+var Bus = require('busmq');
+var bus = Bus.create({redis: ['redis://127.0.0.1:6379']});
 bus.on('online', function() {
   var q = bus.queue('foo');
   q.on('attached', function() {
@@ -129,7 +134,9 @@ bus.on('online', function() {
   q.attach();
   q.consume(); // the 'message' event will be fired when a message is retrieved
 });
+bus.connect();
 ```
+
 
 #### Consumption Modes
 
