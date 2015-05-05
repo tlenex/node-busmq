@@ -336,13 +336,15 @@ Federation is done over web sockets since they are firewall and proxy friendly.
 
 The federating bus utilizes a simple pool of hot-connected web sockets. When a bus is initialized, it immediately
 spins up an initial number of web sockets that connect to other bus instances. When federating an object, the bus
-selects a web socket from the pool and starts federating the object over it. Once a web socket is given for federation from the
-pool, the pool immediately opens a new web socket to replace the one that was just given. This way, the pool
+selects a web socket from the pool and starts federating the object over it. If the number of websockets remaining in the pool
+reaches a defined minimum size, the pool immediately opens a new web socket to replace the one that was just given. This way, the pool
 always contains a minimum number of available web sockets for immediate use.
+Once a websocket is no longer needed for federation it is placed back into the pool for re-use by another federating client.
+The pool size never grows beyond a defined maximum.
 This behavior provides the best performance by eliminating the need to wait for the web socket to open when starting to federate.
 
 The API and events of a federated objects are exactly the same as a non-federated objects. This is achieved
-using the awesome [dnode](https://github.com/substack/dnode) module for RPCing the object API.
+using the [dnode](https://github.com/substack/dnode) module for RPCing the object API.
 
 #### Opening a bus with a federation server
 
@@ -496,7 +498,7 @@ However, increasing the number of queues by an order of magnitude does effect th
 
 ## API
 
-Enough with examples. Let's see the API.
+Phew, that was long. Let's see the API.
 
 ### Bus API
 
@@ -509,7 +511,8 @@ Create a new bus instance. Options:
   * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open
   * `path` - the path within the server to accept federation requests on
   * `urls` - an array of urls of the form `http[s]://<ip-or-host>[:port]` of other bus instances that this bus can federate to. default is an empty array.
-  * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
+  * `poolSize` - the maximum number of web sockets to keep open and idle at all times to federated bus instances. default is 15.
+  * `poolSizeMin` - the minimum pool size. default is `poolSize/3`.
   * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
 * `logger` - the logger that the bus should use
 
