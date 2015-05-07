@@ -1594,7 +1594,7 @@ describe('Bus', function() {
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 10 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1640,7 +1640,7 @@ describe('Bus', function() {
       bus.on('error', done);
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: objects/2 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', done);
         busFed.on('online', function() {
 
