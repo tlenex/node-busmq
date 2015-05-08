@@ -1,5 +1,5 @@
 var http = require('http');
-var _url = require('url');
+var crypto = require('crypto');
 var Should = require('should');
 var redisHelper = require('./redis-helper');
 var Bus = require('../lib/bus');
@@ -138,7 +138,7 @@ function produceAndConsumeOverFederation(pBus, cBus, fedTo, messages, queues, cb
   for (var i = 0; i < queues; ++i) {
     (function() {
       var qName = 'test-'+i+'-'+Math.random();
-      var testMessage = 'message-'+i;
+      var testMessage = new Buffer(crypto.randomBytes(1024)).toString('ascii');
       // create producer
       var pFed = pBus.federate(pBus.queue(qName), fedTo);
       pFed.on('error', cb);
@@ -154,22 +154,32 @@ function produceAndConsumeOverFederation(pBus, cBus, fedTo, messages, queues, cb
         });
         p.on('attached', function() {
           // create the consumer
-          var c = cBus.queue(qName);
-          c.on('error', cb);
-          c.on('message', function(message) {
-            message.should.be.exactly(testMessage);
-            if (c.consumed() === messages) {
-              c.detach();
-            }
+          var cFed = cBus.federate(cBus.queue(qName), fedTo);
+          cFed.on('error', cb);
+          cFed.on('unauthorized', function() {
+            cb('unauthorized')
           });
-          c.on('detached', function() {
+          cFed.on('close', function() {
             pFed.close();
           });
-          c.on('attached', function() {
-            // consume all messages
-            c.consume();
+          cFed.on('ready', function(c) {
+            var consumed = 0;
+            c.on('error', cb);
+            c.on('message', function(message) {
+              (message == testMessage).should.be.exactly(true);
+              if (++consumed === messages) {
+                c.detach();
+              }
+            });
+            c.on('detached', function() {
+              cFed.close();
+            });
+            c.on('attached', function() {
+              // consume all messages
+              c.consume();
+            });
+            c.attach();
           });
-          c.attach();
 
           // push messages
           var pushed = 0;
@@ -1600,7 +1610,7 @@ describe('Bus', function() {
         });
         busFed.on('online', function() {
           var time = process.hrtime();
-          produceAndConsumeOverFederation(busFed, bus, 'http://127.0.0.1:9777/federate', messages, queues, function(err) {
+          produceAndConsumeOverFederation(busFed, busFed, 'http://127.0.0.1:9777/federate', messages, queues, function(err) {
             if (err) {
               done(err);
               return;
@@ -1649,36 +1659,44 @@ describe('Bus', function() {
             if (--objects === 0) {
               var diff = process.hrtime(time);
               console.log('persist ' + total +' objects over federation took %d milliseconds', (diff[0] * 1e9 + diff[1]) / 1000000);
-              busFed.disconnect();
+              process.nextTick(function() {
+                busFed.disconnect();
+              });
             }
           }
 
           for (var iObject = 0; iObject < objects; ++iObject) {
             (function(i) {
               var name = 'data'+i;
-              var object = bus.persistify(name, {}, ['field1', 'field2', 'field3']);
-              object.field1 = 'val'+i;
-              object.field2 = 2;
-              object.field3 = true;
-              object.save(function(err, key) {
-                Should(err).equal(null);
-                Should(key).equal(object.id);
-                var fedObj = busFed.federate(busFed.persistify(name, {}, ['field1', 'field2', 'field3']), 'http://127.0.0.1:9777/federate');
-                fedObj.on('ready', function(obj) {
-                  obj.load(function(err, exists, key) {
-                    Should(err).equal(null);
-                    exists.should.be.exactly(true);
-                    Should(key).equal(object.id);
-                    Should(obj.field1).equal('val'+i);
-                    Should(obj.field2).equal(2);
-                    Should(obj.field3).equal(true);
-                    fedObj.close();
+              var fedObj1 = busFed.federate(busFed.persistify(name, {}, ['field1', 'field2', 'field3']), 'http://127.0.0.1:9777/federate');
+              fedObj1.on('ready', function(object) {
+                object.field1 = 'val'+i;
+                object.field2 = 2;
+                object.field3 = true;
+                object.save(function(err, key) {
+                  Should(err).equal(null);
+                  Should(key).equal(object.id);
+                  var fedObj2 = busFed.federate(busFed.persistify(name, {}, ['field1', 'field2', 'field3']), 'http://127.0.0.1:9777/federate');
+                  fedObj2.on('ready', function(obj) {
+                    obj.load(function(err, exists, key) {
+                      Should(err).equal(null);
+                      exists.should.be.exactly(true);
+                      Should(key).equal(object.id);
+                      Should(obj.field1).equal('val'+i);
+                      Should(obj.field2).equal(2);
+                      Should(obj.field3).equal(true);
+                      fedObj2.close();
+                    });
+                  });
+                  fedObj2.on('error', done);
+                  fedObj2.on('close', function() {
+                    fedObj1.close();
                   });
                 });
-                fedObj.on('error', done);
-                fedObj.on('close', function() {
-                  _done();
-                });
+              });
+              fedObj1.on('error', done);
+              fedObj1.on('close', function() {
+                _done();
               });
             })(iObject);
           }
@@ -1703,8 +1721,8 @@ describe('Bus', function() {
       testManySavesAndLoadesOverFederation(100, done);
     });
 
-    it('persists 200 objects over federation', function(done) {
-      testManySavesAndLoadesOverFederation(200, done);
+    it('persists 500 objects over federation', function(done) {
+      testManySavesAndLoadesOverFederation(500, done);
     });
 
   });
