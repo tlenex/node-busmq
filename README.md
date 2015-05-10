@@ -517,6 +517,10 @@ Call `bus#connect` to connect to the redis instances and to open the federation 
 
 Attach a logger to the bus instance. Returns the bus instance.
 
+##### bus#debug(on)
+
+Turn on or off printing of debug messages to the log. default is off.
+
 ##### bus#withRedis(redis)
 
 Use the provided `node_redis` client to create connections. Returns the bus instance.
