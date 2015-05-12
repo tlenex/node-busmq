@@ -1,6 +1,6 @@
 ![busmq logo](/busmq-logo.png)
 
-![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)
+[![Build Status](https://travis-ci.org/capriza/node-busmq.svg?branch=master)](http://travis-ci.org/capriza/node-busmq)
 
 A high performance, highly available and scalable, message bus and queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
