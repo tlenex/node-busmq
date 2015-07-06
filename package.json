@@ -53,9 +53,11 @@
   "main": "index.js",
   "files": [
     "index.js",
-    "browser.js",
+    "browser-build.sh",
+    "busmq.js",
+    "busmq.min.js",
     "lib",
-    "shim"
+    "browser"
   ],
   "license": "MIT",
   "scripts": {
