@@ -1,20 +1,33 @@
 {
   "name": "busmq",
-  "version": "0.10.3",
+  "version": "0.11.0",
   "description": "A high performance, highly-available and scalable, message bus and queueing system for node.js backed by Redis",
   "author": "Capriza Inc. <backend@capriza.com>",
   "maintainers": [
     "Nadav Fischer <fujifischer@gmail.com>"
   ],
   "homepage": "http://github.com/capriza/node-busmq",
-  "repository" : { "type" : "git" , "url" : "http://github.com/capriza/node-busmq.git" },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/capriza/node-busmq.git"
+  },
   "bugs": {
     "url": "https://github.com/capriza/node-busmq/issues"
   },
-  "keywords": ["bus", "message", "queue", "mq", "channel", "federation", "redis", "reliable", "guarantee"],
+  "keywords": [
+    "bus",
+    "message",
+    "queue",
+    "mq",
+    "channel",
+    "federation",
+    "redis",
+    "reliable",
+    "guarantee"
+  ],
   "dependencies": {
-    "redis": "0.12.1",
-    "hiredis": "0.4.0"
+    "hiredis": "0.4.0",
+    "redis": "0.12.1"
   },
   "optionalDependencies": {
     "ws": "0.7.2",
@@ -25,13 +38,24 @@
     "should": "4.0.4",
     "mocha": "1.21.4"
   },
+  "browser": {
+    "./index.js": "./browser/index.js",
+    "./lib/fedserver.js": "./browser/empty.js",
+    "./lib/connection.js": "./browser/empty.js",
+    "redis": false,
+    "hiredis": false,
+    "crypto": "./browser/crypto.js",
+    "ws": "./browser/ws.js"
+  },
   "engines": {
     "node": ">=0.10.3"
   },
   "main": "index.js",
   "files": [
     "index.js",
-    "lib"
+    "browser.js",
+    "lib",
+    "shim"
   ],
   "license": "MIT",
   "scripts": {
