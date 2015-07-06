@@ -5,6 +5,12 @@
 A high performance, highly available and scalable, message bus and queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
+### What's New
+
+##### 0.11.0
+
+Added support for running a federation client directly from a browser (via browserify)
+
 ### The Basics
 
 * Event based message queues
@@ -492,6 +498,46 @@ It is also apparent that the push/consume throughput is quite consistent over ti
 Additional testing indicates that the size of the messages has little to no impact on the throughput.
 However, increasing the number of queues by an order of magnitude does effect the performance.
 
+## Browser Support
+
+Version 0.11.0 introduced browser support using browserify for connecting to a running bus.
+It works by utilizing federation to the bus server over native browser websockets.
+
+#### Usage
+
+```javascript
+<script src="busmq.min.js"></script>
+
+<script>
+  // connect to the bus running a federation server on port 8080 and with secret 'notsosecret'
+  var bus = busmq('ws://localhost:8080/', 'notsosecret');
+
+  // create a queue object named 'foo'.
+  // the queue will be created in the bus and the callback will be invoked when the queue is ready
+  bus.queue('foo', function(err, q) {
+    if (err) {
+      console.log('bus: error ' + err);
+      return;
+    }
+    console.log('bus: q ready');
+    q.on('attached', function() {
+      console.log('bus: queue attached');
+      // push 5 messages to the queue
+      for (var i = 0; i < 5; ++i) {
+        q.push('message number ' + i);
+      }
+    });
+    q.on('message', function(message, id) {
+      // 5 messages should be received
+      console.log('got bus message ' + id + ': ' + message);
+    });
+    // attach to the queue and consume messages from it
+    q.attach();
+    q.consume();
+  });
+</script>
+```
+
 ## API
 
 Phew, that was long. Let's see the API.
@@ -779,6 +825,43 @@ Close the federation object.
 * `close` - the federation connection closed
 * `error` - some error occurred. the callback receives the `error` message
 
+#### Browser API
+
+This API is only available from a browser and enables to connect to a bus running a federation server,
+and enables the use of queues, channels and persisted objects.
+
+##### busmq(url, secret)
+
+Connect to the federation server a of running bus.
+Returns a `Bus` object.
+
+* `url` - the url of the bus federation server. the protocol must be `ws` or `wss`.
+* `secret` - the federation server secret
+
+##### bus#queue(name, cb)
+
+Create a federated `queue` object.
+
+* `name` - queue name
+* `cb` - callback invoked when the federated object is ready. the callback format is `function(err, queue)`.
+
+##### bus#channel(name, local, remote, cb)
+
+Create a federated `channel` object.
+
+* `name` - channel name
+* `local` - local role
+* `remote` - remote role
+* `cb` - callback invoked when the federated object is ready. the callback format is `function(err, channel)`.
+
+##### bus#persistify(name, object, attributes, cb)
+
+Create a federated `persistable` object.
+
+* `name` - channel name
+* `object` - the object to persistify
+* `attributes` - object attributes to persist
+* `cb` - callback invoked when the federated object is ready. the callback format is `function(err, persisted)`.
 
 ## Tests
 
