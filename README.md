@@ -785,7 +785,7 @@ Returns `true` if connected to the channel, `false` if not connected.
 * `end` - emitted when the remote peer ends the channel
 * `error` - emitted when an error occurs. The listener callback receives the error.
 
-#### Persistable API
+### Persistable API
 
 ##### persistable#save(callback)
 
@@ -810,7 +810,7 @@ Start a periodic timer to continuously mark the persisted object as being used.
 
 Stop the periodic timer. This will cause object to expire after the defined ttl provided in the persist method.
 
-#### Federate API
+### Federate API
 
 ##### federate#close(disconnect)
 
@@ -825,7 +825,7 @@ Close the federation object.
 * `close` - the federation connection closed
 * `error` - some error occurred. the callback receives the `error` message
 
-#### Browser API
+### Browser API
 
 This API is only available from a browser and enables to connect to a bus running a federation server,
 and enables the use of queues, channels and persisted objects.
