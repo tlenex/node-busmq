@@ -8,10 +8,10 @@ var childProcess = require('child_process')
   , keyRE = /(port:\s+\d+)|(pid:\s+\d+)|(already\s+in\s+use)|(not\s+listen)|error|denied|(server\s+is\s+now\s+ready)/ig
   , strRE = / /ig;
 
-function RedisHelper(configOrPort) {
-  this.config = typeof configOrPort === 'number' ? { port: configOrPort } : (configOrPort || {});
+function RedisHelper(port, auth) {
   this.pid = null;
-  this.port = null;
+  this.port = port;
+  this.auth = auth;
   this.process = null;
   this.isClosing = false;
   this.isRunning = false;
@@ -31,7 +31,12 @@ RedisHelper.prototype.open = function() {
 
   var self = this;
 
-  this.process = childProcess.spawn('redis-server', ['--port', this.config.port]);
+  var args = ['--port', this.port];
+  if (this.auth) {
+    args.push('--requirepass');
+    args.push(this.auth);
+  }
+  this.process = childProcess.spawn('redis-server', args);
   this.isOpening = true;
 
   function parse(value) {
@@ -54,7 +59,7 @@ RedisHelper.prototype.open = function() {
 
       case 'serverisnowready':
         self.isOpening = false;
-        self.client = redis.createClient(self.port, '127.0.0.1');
+        self.client = redis.createClient(self.port, '127.0.0.1', {auth_pass: self.auth});
         return self.emit('ready');
 
       case 'pid':
@@ -120,8 +125,8 @@ RedisHelper.prototype.close = function(callback) {
   return true;
 };
 
-function open(port, callback) {
-  var helper = new RedisHelper(port);
+function open(port, auth, callback) {
+  var helper = new RedisHelper(port, auth);
   RedisHelper.prototype.open.apply(helper, callback);
   return helper;
 }

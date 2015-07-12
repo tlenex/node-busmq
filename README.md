@@ -5,12 +5,6 @@
 A high performance, highly available and scalable, message bus and queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
-### What's New
-
-##### 0.11.0
-
-Added support for running a federation client directly from a browser (via browserify)
-
 ### The Basics
 
 * Event based message queues
@@ -22,6 +16,7 @@ Added support for running a federation client directly from a browser (via brows
 * Scalability through the use of multiple redis instances and node processes
 * High availability through redis master-slave setup and stateless node processes
 * Tolerance to dynamic addition of redis instances during scale out
+* Connect to the bus from a browser
 * Fast
 
 ### Why Yet Another "Queue-Backed-by-Redis" Module?
@@ -54,7 +49,7 @@ the bus will still find the correct redis instance. There will be some time pena
 stabilizes after the addition.
 
 High availability for redis is achieved by using standard redis high availability setups, such as
-[Redis Sentinal](http://redis.io/topics/sentinel) or [AWS ElasticCache](http://aws.amazon.com/elasticache/)
+[Redis Cluster](http://redis.io/topics/cluster-tutorial), [Redis Sentinal](http://redis.io/topics/sentinel) or [AWS ElasticCache](http://aws.amazon.com/elasticache/)
 
 ## Bus
 
@@ -67,11 +62,13 @@ node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) mo
 so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
 achieve the best performance.
 
+If the redis server requires an authentication password, specify it in auth part of the redis connection url.
+
 #### Connecting to a bus
 
 ```javascript
 var Bus = require('busmq');
-var bus = Bus.create({redis: ['redis://192.168.0.1:6379', 'redis://192.168.0.2:6379']);
+var bus = Bus.create({redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
 bus.on('error', function(err) {
   // an error has occurred
 });
@@ -548,7 +545,8 @@ Phew, that was long. Let's see the API.
 
 Create a new bus instance. Options:
 
-* `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls. A valid url has the form `redis://<host_or_ip>[:port]`.
+* `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls.
+             A valid url has the form `redis://[auth_pass@]<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
   * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open
   * `path` - the path within the server to accept federation requests on

@@ -7,16 +7,19 @@ var Bus = require('../lib/bus');
 var fedserver;
 
 var redisPorts = [9888,9889,9890,9891];
+var redisAuths = [null,'auth1',null,'auth2'];
 var redisUrls = [];
-redisPorts.forEach(function(port) {
-  redisUrls.push('redis://127.0.0.1:'+port);
+redisPorts.forEach(function(port, i) {
+  redisUrls.push('redis://' + (redisAuths[i]?(redisAuths[i]+'@'):'') + '127.0.0.1:'+port);
 });
 
 var redises = [];
 
-function redisStart(port, done) {
-  console.log('<starting redis on port ' + port + '>');
-  var redis = redisHelper.open(port);
+function redisStart(index, done) {
+  var port = redisPorts[index];
+  var auth = redisAuths[index];
+  console.log('<starting redis on port ' + port + ' with auth ' + auth + '>');
+  var redis = redisHelper.open(port, auth);
   redises.push(redis);
   redis.on('error', function(err) {
     done(new Error(err));
@@ -27,11 +30,12 @@ function redisStart(port, done) {
   });
 }
 
-function redisStop(redis, done) {
+function redisStop(index, done) {
+  var redis = redises[index];
   console.log('<closing redis>');
   redis.close(function() {
     console.log('<redis closed>');
-    redises.splice(redises.indexOf(redis), 1);
+    redises.splice(index, 1);
     done();
   });
 }
@@ -57,7 +61,7 @@ function startAllRedises(cb) {
   console.log('<starting all redises>');
   var dones = 0;
   for (var i = 0; i < redisPorts.length; ++i) {
-    redisStart(redisPorts[i], function() {
+    redisStart(i, function() {
       if (++dones === redisPorts.length) {
         cb && cb();
       }
@@ -69,7 +73,7 @@ function stopAllRedises(cb) {
   console.log('<stopping all redises>');
   var dones = 0;
   for (var i = 0; i < redisPorts.length; ++i) {
-    redisStop(redises[i], function() {
+    redisStop(i, function() {
       if (++dones === redisPorts.length) {
         cb && cb();
       }
