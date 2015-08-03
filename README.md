@@ -554,6 +554,7 @@ Create a new bus instance. Options:
   * `poolSize` - the number of web sockets to keep open and idle at all times to federated bus instances. default is 10.
   * `secret` - a secret key to be shared among all bus instances that can federate to each other. default is `notsosecret`.
 * `logger` - the logger that the bus should use
+* `logLevel` - specify the bus log level. possible values are 'error', 'warning', 'info', 'debug'. default is 'error'
 
 Call `bus#connect` to connect to the redis instances and to open the federation server.
 
