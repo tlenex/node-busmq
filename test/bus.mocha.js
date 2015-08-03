@@ -224,7 +224,7 @@ describe('Bus', function() {
   describe('bus connection', function() {
 
     it('should emit online event when connected and offline event after disconnecting', function(done) {
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug'});
       bus.on('error', function(err) {
         done(err);
       });
