@@ -1368,12 +1368,13 @@ describe('Bus', function() {
 
     beforeEach(function(done) {
       fedserver = http.createServer();
-      fedserver.listen(9777);
-      done();
+      fedserver.listen(9777, function() {
+        done();
+      });
     });
 
     afterEach(function(done) {
-      fedserver.close();
+      fedserver && fedserver.close();
       done();
     });
 
@@ -1558,6 +1559,184 @@ describe('Bus', function() {
         });
         busFed.connect();
 
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('federation websocket of queue closes and reopens', function(done) {
+
+      var bus2;
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create the bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug', federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var consuming = false;
+          var msgs = [];
+          var name = 'q'+Date.now();
+          var f = busFed.federate(busFed.queue(name), 'http://127.0.0.1:9777/federate');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            done('unauthorized')
+          });
+          f.on('ready', function(q) {
+            q.on('error', done);
+            q.on('attached', function() {
+              q.consume();
+            });
+            q.on('consuming', function(state) {
+              if (state) {
+                if (consuming) {
+                  return;
+                }
+                consuming = true;
+                q.push('hello', function() {
+                  // the message was pushed, close the fedserver of the first bus and terminate the websockets to force
+                  // the websockets to go to the other bus.
+                  // stop the original bus from accepting new federate connections
+                  fedserver.close();
+                  // create the other bus to listen for ws connections to simulate multiple processes
+                  fedserver = http.createServer();
+                  fedserver.listen(9777);
+                  bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+                  bus2.on('error', function(err) {
+                    done(err);
+                  });
+                  bus2.on('online', function() {
+                    // force close websocket connection
+                    busFed.wspool.pool['http://127.0.0.1:9777/federate'][0].ws._socket.destroy();
+                    // now send the second message after 1 second. it should reach the second bus.
+                    setTimeout(function() {
+                      q.push('world');
+                    }, 1000);
+                  });
+                  bus2.on('offline', function() {
+                    bus.disconnect();
+                  });
+                  bus2.connect();
+                });
+              } else {
+                q.detach();
+              }
+            });
+            q.on('message', function(msg) {
+              msgs.push(msg);
+              if (msgs.length === 2) {
+                q.stop();
+              }
+            });
+            q.on('detached', function() {
+              msgs.length.should.be.exactly(2);
+              msgs[0].should.be.exactly('hello');
+              msgs[1].should.be.exactly('world');
+              f.close();
+            });
+            q.attach();
+          });
+          f.on('close', function() {
+            busFed.disconnect();
+          });
+        });
+        busFed.on('offline', function() {
+          bus2.disconnect();
+        });
+        busFed.connect();
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('federation websocket of channel closes and reopens', function(done) {
+
+      var bus2;
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create the bus to federate requests
+        var busFed = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug', federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var name = 'q'+Date.now();
+          var f = busFed.federate(busFed.channel(name, 'local', 'remote'), 'http://127.0.0.1:9777/federate');
+          f.on('error', done);
+          f.on('unauthorized', function() {
+            done('unauthorized')
+          });
+          f.on('ready', function(c) {
+            var sent = false;
+            c.on('error', done);
+            c.on('remote:connect', function() {
+              if (sent) {
+                return;
+              }
+              sent = true;
+              c.send('hello');
+            });
+            c.on('message', function(message) {
+              message.should.be.exactly('world');
+              c.disconnect();
+              c2.disconnect();
+              f.close();
+            });
+            c.connect();
+          });
+          f.on('close', function() {
+            busFed.disconnect();
+          });
+
+          var c2 = bus.channel(name, 'remote', 'local');
+          c2.on('error', done);
+          c2.on('remote:connect', function() {
+          });
+          c2.on('message', function(message) {
+            message.should.be.exactly('hello');
+
+            // before sending the world, close the federating websocket.
+            // close the fedserver of the first bus and terminate the websockets to force
+            // the websockets to go to the other bus.
+            // stop the original bus from accepting new federate connections
+            fedserver.close();
+            // create the other bus to listen for ws connections to simulate multiple processes
+            fedserver = http.createServer();
+            fedserver.listen(9777);
+            bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+            bus2.on('error', function(err) {
+              done(err);
+            });
+            bus2.on('online', function() {
+              // force close websocket connection
+              busFed.wspool.pool['http://127.0.0.1:9777/federate'][0].ws._socket.destroy();
+              // now send the world message after 1 second. it should reach the second bus.
+              setTimeout(function() {
+                c2.send('world');
+              }, 1000);
+            });
+            bus2.on('offline', function() {
+              bus.disconnect();
+            });
+            bus2.connect();
+          });
+          c2.connect();
+        });
+        busFed.on('offline', function() {
+          bus2.disconnect();
+        });
+        busFed.connect();
       });
       bus.on('offline', function() {
         done();
