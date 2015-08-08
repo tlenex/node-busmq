@@ -1616,23 +1616,19 @@ describe('Bus', function() {
         return ++count;
       }
 
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console, logLevel: 'debug'});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({
-          redis: redisUrls,
-          logger: console,
-          federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5,
-          logLevel: 'debug'}
-        });
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5} });
         busFed.on('error', function(err) {
           done(err);
         });
         busFed.on('online', function() {
           var qName = 'test' + Math.random();
+          var pFed;
           // create subscriber
           var fed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
           fed.on('error', done);
@@ -1646,11 +1642,12 @@ describe('Bus', function() {
               }
             });
             s.on('unsubscribed', function() {
-              busFed.disconnect();
+              pFed.close();
+              fed.close();
             });
             s.on('subscribed', function() {
               // create publisher
-              var pFed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
+              pFed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
               pFed.on('error', done);
               pFed.on('ready', function(p) {
                 p.on('error', done);
@@ -1660,6 +1657,9 @@ describe('Bus', function() {
             });
             s.subscribe();
           });
+          fed.on('close', function() {
+            busFed.disconnect();
+          })
         });
         busFed.on('offline', function() {
           bus.disconnect();
@@ -1675,13 +1675,13 @@ describe('Bus', function() {
     it('federation websocket of queue closes and reopens', function(done) {
 
       var bus2;
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create the bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug', federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1713,7 +1713,7 @@ describe('Bus', function() {
                   // create the other bus to listen for ws connections to simulate multiple processes
                   fedserver = http.createServer();
                   fedserver.listen(9777);
-                  bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+                  bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
                   bus2.on('error', function(err) {
                     done(err);
                   });
@@ -1766,13 +1766,13 @@ describe('Bus', function() {
     it('federation websocket of channel closes and reopens', function(done) {
 
       var bus2;
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create the bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug', federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1820,7 +1820,7 @@ describe('Bus', function() {
             // create the other bus to listen for ws connections to simulate multiple processes
             fedserver = http.createServer();
             fedserver.listen(9777);
-            bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console, logLevel: 'debug'});
+            bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
             bus2.on('error', function(err) {
               done(err);
             });
