@@ -1364,6 +1364,49 @@ describe('Bus', function() {
     });
   });
 
+  describe('pubsub', function() {
+
+    it('should receive subscribe/unsubscribe and message events', function(done) {
+      var count = 0;
+
+      function _count() {
+        return ++count;
+      }
+
+      var bus = Bus.create({redis: redisUrls, logger: console});
+      bus.on('error', done);
+      bus.on('online', function() {
+        var qName = 'test' + Math.random();
+        // create subscriber
+        var s = bus.pubsub(qName);
+        s.on('error', done);
+        s.on('message', function(message) {
+          if (_count() === 1) {
+            message.should.be.exactly('hello');
+          } else {
+            message.should.be.exactly('world');
+            s.unsubscribe();
+          }
+        });
+        s.on('unsubscribed', function() {
+          bus.disconnect();
+        });
+        s.on('subscribed', function() {
+          // create publisher
+          var p = bus.pubsub(qName);
+          p.on('error', done);
+          p.publish('hello');
+          p.publish('world');
+        });
+        s.subscribe();
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+  });
+
   describe('federation', function() {
 
     beforeEach(function(done) {
@@ -1559,6 +1602,69 @@ describe('Bus', function() {
         });
         busFed.connect();
 
+      });
+      bus.on('offline', function() {
+        done();
+      });
+      bus.connect();
+    });
+
+    it('federate pubsub events', function(done) {
+      var count = 0;
+
+      function _count() {
+        return ++count;
+      }
+
+      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console, logLevel: 'debug'});
+      bus.on('error', function(err) {
+        done(err);
+      });
+      bus.on('online', function() {
+        // create a second bus to federate requests
+        var busFed = Bus.create({
+          redis: redisUrls,
+          logger: console,
+          federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5,
+          logLevel: 'debug'}
+        });
+        busFed.on('error', function(err) {
+          done(err);
+        });
+        busFed.on('online', function() {
+          var qName = 'test' + Math.random();
+          // create subscriber
+          var fed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
+          fed.on('error', done);
+          fed.on('ready', function(s) {
+            s.on('message', function(message) {
+              if (_count() === 1) {
+                message.should.be.exactly('hello');
+              } else {
+                message.should.be.exactly('world');
+                s.unsubscribe();
+              }
+            });
+            s.on('unsubscribed', function() {
+              busFed.disconnect();
+            });
+            s.on('subscribed', function() {
+              // create publisher
+              var pFed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
+              pFed.on('error', done);
+              pFed.on('ready', function(p) {
+                p.on('error', done);
+                p.publish('hello');
+                p.publish('world');
+              });
+            });
+            s.subscribe();
+          });
+        });
+        busFed.on('offline', function() {
+          bus.disconnect();
+        });
+        busFed.connect();
       });
       bus.on('offline', function() {
         done();

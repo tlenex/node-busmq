@@ -9,8 +9,9 @@ Message queues are backed by [Redis](http://redis.io/), a high performance, in-m
 
 * Event based message queues
 * Event based bi-directional channels for peer-to-peer communication (backed by message queues)
-* Reliable delivery of messages (AKA Guarantee Delivery)
-* Persistent Publish/Subscribe
+* Reliable delivery of messages (AKA Guaranteed Delivery)
+* Publish/Subscribe channels
+* Persistent Publish/Subscribe (backed by message queues)
 * Federation over distributed data centers
 * Auto expiration of queues after a pre-defined idle time
 * Scalability through the use of multiple redis instances and node processes
@@ -184,6 +185,13 @@ q.consume({reliable: true, last: 3});
 This is a form of publish/subscribe, where all consumers receive all messages, even if they were not consuming at the time messages were
 being pushed to the queue. A consumer can also specify the index of the message to start consuming from.
 
+This is different than regular publish/subscribe since persistent publish/subscribe utilizes message queues to store
+every published message, whereas regular publish/subscribe does not store published messages at any time.
+
+Be careful using Persistent publish/subscribe for long periods of time and many messages since the messages are stored
+in the queue for the entire existence of the queue. Misuse may lead to memory growth and an
+eventual blowup of the redis server.
+
 ```javascript
 // consume message without removing them from the queue. start consuming from message at index 0.
 q.consume({remove: false, index: 0});
@@ -324,6 +332,28 @@ bus.on('online', function() {
 });
 ```
 
+## Publish/Subscribe
+
+A plain old publish/subscribe channel. These channels are not backed by queues, so any subscriber not subscribed at the
+time a message is published will not receive the message.
+
+Publish/Subscribe channel are always created on the first redis server in the list of redis servers
+the bus is connected to. The reason for this is the time it would take to locate a publish/subscribe channel via the
+redis api were the channels distributed between all redis servers (it's O(N) where N is the number of subscribers).
+
+```javascript
+bus.on('online', function() {
+  var s = bus.pubsub('my pubsub channel');
+  s.on('message', function(message) {
+    // received message 'hello world' on subscribed channel
+  });
+  s.subscribe();
+
+  var p = bus.pubsub('my pubsub channel');
+  p.publish('hello world');
+});
+```
+
 ## Federation
 
 It is sometimes desirable to setup bus instances in different locations, where redis
@@ -443,6 +473,34 @@ bus.on('online', function() {
    p.load(function(err, exists) {
      // do whatever
    });
+ });
+});
+```
+
+#### Federating a pubsub
+
+```javascript
+var Bus = require('busmq');
+var options = {
+  redis: 'redis://127.0.0.1', // connect this bus to a local running redis
+  federate: { // also connect to a federate bus
+    poolSize: 5, // keep the pool size with 5 web sockets
+    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret',  // the secret ket to authorize with the federation server
+    path: '/my/fed/path'
+  }
+};
+var bus = Bus.create(options);
+bus.on('online', function() {
+ // federate the channel to a bus located at a different data center
+ var fed = bus.federate(bus.pubsub('bar'), 'http://my.other.bus');
+ fed.on('ready', function(p) {
+   // federation is ready - we can start using pubsub
+   p.on('message', function(message) {
+     // do whatever
+   });
+   p.subscribe();
+   p.publish('foo bar');
  });
 });
 ```
@@ -598,6 +656,14 @@ Create a new [Channel](#channel) instance.
 * `name` - the name of the channel.
 * `local` - \[optional\] specifies the local role. default is `local`.
 * `remote` - \[optional\] specifies the remote role. default is `remote`.
+
+##### bus#pubsub(name)
+
+Create a new [Pubsub](#pubsub) instance.
+
+* `name` - the name of the pubsub channel.
+
+Returns a new Pubsub instance.
 
 ##### bus#persistify(name, object, properties)
 
@@ -784,6 +850,31 @@ Returns `true` if connected to the channel, `false` if not connected.
 * `end` - emitted when the remote peer ends the channel
 * `error` - emitted when an error occurs. The listener callback receives the error.
 
+### Pubsub API
+
+##### pubsub#publish(message)
+
+Publishes a message on the pubsub channel. Only currently subscribed clients will receive the message.
+
+##### pubsub#subscribe()
+
+Subscribes to message in the pubsub channel. Once a message is received, the `message` event will be emitted.
+
+##### pubsub#unsubscribe()
+
+Unsubscribes from messages on the pubsub channel. Messages can still be published using the `publish` method.
+
+##### channel#isSubscribed()
+
+Returns `true` if subscribed to messages from the pubsub channel, `false` if not.
+
+#### Pubsub Events
+
+* `subscribed` - emitted when subscribed to messages on the pubsub channel
+* `unsubscribed` - emitted when unsubscribing from the pubsub channel
+* `message` - emitted when a message is received from the pubsub channel. The listener callback receives the message as a string.
+* `error` - emitted when an error occurs. The listener callback receives the error.
+
 ### Persistable API
 
 ##### persistable#save(callback)
@@ -852,6 +943,13 @@ Create a federated `channel` object.
 * `local` - local role
 * `remote` - remote role
 * `cb` - callback invoked when the federated object is ready. the callback format is `function(err, channel)`.
+
+##### bus#pubsub(name, cb)
+
+Create a federated `pubsub` object.
+
+* `name` - queue name
+* `cb` - callback invoked when the federated object is ready. the callback format is `function(err, pubsub)`.
 
 ##### bus#persistify(name, object, attributes, cb)
 
