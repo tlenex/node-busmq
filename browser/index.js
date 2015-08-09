@@ -32,6 +32,14 @@ BusClient.prototype.channel = function(name, local, remote, cb) {
   fed.on('error', cb);
 };
 
+BusClient.prototype.pubsub = function(name, cb) {
+  var fed = this.bus.federate(this.bus.pubsub(name), this.url);
+  fed.on('ready', function(q) {
+    cb(null, q);
+  });
+  fed.on('error', cb);
+};
+
 BusClient.prototype.persistify = function(name, object, attributes, cb) {
   var fed = this.bus.federate(this.bus.persistify(name, object, attributes), this.url);
   fed.on('ready', function(p) {
