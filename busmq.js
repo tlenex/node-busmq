@@ -721,18 +721,21 @@ Channel.prototype.send = function(message, cb) {
  * Send a message to the specified endpoint without connecting to the channel
  * @param endpoint
  * @param msg
+ * @param cb
  * @private
  */
-Channel.prototype.sendTo = function(endpoint, msg) {
+Channel.prototype.sendTo = function(endpoint, msg, cb) {
   var _this = this;
   var q = new Queue(this.bus, 'channel:' + endpoint + ':' + this.name);
   q.on('error', function(err) {
     _this.logger.isDebug() && _this.logger.debug('error on channel sendTo ' + q.name + ': ' + err);
     q.detach();
+    cb && cb(err);
+    cb = null;
   });
   q.on('attached', function() {
     try {
-      q.push(':2:' + msg);
+      q.push(':2:' + msg, cb);
     } finally {
       q.detach();
     }
@@ -778,13 +781,14 @@ Channel.prototype.isAttached = function() {
 /**
  * Ack the specified message id. applicable only if consuming in reliable mode.
  * @param id the message id to ack
+ * @param cb invoked when the ack is complete
  */
-Channel.prototype.ack = function(id) {
+Channel.prototype.ack = function(id, cb) {
   if (!this.isAttached()) {
     return;
   }
 
-  this.qConsumer.ack(id);
+  this.qConsumer.ack(id, cb);
 };
 
 /**
@@ -1690,7 +1694,7 @@ Pubsub.prototype.isSubscribed = function() {
 /**
  * Publish a message on the pubsub channel
  */
-Pubsub.prototype.publish = function(message) {
+Pubsub.prototype.publish = function(message, cb) {
   var _this = this;
   var connection = this._connect();
   if (!connection) {
@@ -1699,8 +1703,14 @@ Pubsub.prototype.publish = function(message) {
 
   connection.publish(_this.id, message, function(err, resp) {
     if (err) {
-      _this.emit('error', "error publishing message: " + err);
+      if (cb) {
+        cb(err);
+      } else {
+        _this.emit('error', "error publishing message: " + err);
+      }
+      return;
     }
+    cb && cb();
   });
 };
 
@@ -1802,11 +1812,17 @@ Queue.prototype._emitAttached = function(exists) {
   }
 
   var _this = this;
-  this.ttl(function(ttl) {
+  this.ttl(function(err, ttl) {
+    if (err) {
+      _this.emit('error', err);
+      return;
+    }
+
     if (!ttl) {
       _this.emit('error', 'queue not found');
       return;
     }
+
     _this.attached = true;
     _this._ttl = ttl;
     // start the touch timer.
@@ -1885,14 +1901,24 @@ Queue.prototype.attach = function(options) {
     options = options || {};
     options.ttl = options.ttl || 30; // default ttl of 30 seconds
 
-    _this.exists(function(exists) {
+    _this.exists(function(err, exists) {
+      if (err) {
+        _this.emit('error', err);
+        return;
+      }
+
       if (!exists) {
         // set options for the queue, creating the metadata key
-        _this.metadata('ttl', options.ttl, function() {
+        _this.metadata('ttl', options.ttl, function(err) {
+          if (err) {
+            _this.emit('error', err);
+            return;
+          }
           _this._emitAttached(exists);
         });
         return;
       }
+
       // queue already exists, do not set options
       _this._emitAttached(exists);
     });
@@ -1928,11 +1954,15 @@ Queue.prototype.detach = function() {
  * @param cb receives the ttl
  */
 Queue.prototype.ttl = function(cb) {
-  this.metadata('ttl', function(ttl) {
+  this.metadata('ttl', function(err, ttl) {
+    if (err) {
+      cb && cb(err);
+      return;
+    }
     if (ttl !== null) {
       ttl = parseInt(ttl);
     }
-    cb && cb(ttl);
+    cb && cb(null, ttl);
   });
 };
 
@@ -1943,7 +1973,6 @@ Queue.prototype.ttl = function(cb) {
  * @param cb if getting, will be provided with the value, if setting will be called upon success.
  */
 Queue.prototype.metadata = function(name, value, cb) {
-  var _this = this;
   if (typeof value === 'function') {
     cb = value;
     value = null;
@@ -1952,7 +1981,7 @@ Queue.prototype.metadata = function(name, value, cb) {
   if (value) {
     this.connection.hset(this.metadataKey, name, value, function(err, resp) {
       if (err) {
-        _this.emit('error', "error creating queue metadata: " + err);
+        cb && cb("error creating queue metadata: " + err);
         return;
       }
       cb && cb();
@@ -1960,10 +1989,10 @@ Queue.prototype.metadata = function(name, value, cb) {
   } else {
     this.connection.hget(this.metadataKey, name, function(err, resp) {
       if (err) {
-        _this.emit('error', "error reading metadata " + name + ": " + err);
+        cb && cb("error reading metadata " + name + ": " + err);
         return;
       }
-      cb && cb(resp);
+      cb && cb(null, resp);
     });
   }
 };
@@ -2004,12 +2033,11 @@ Queue.prototype.close = function() {
  * @private
  */
 Queue.prototype._deleteKey = function(key, cb) {
-  var _this = this;
   this.connection.del(key, function(err, resp) {
     if (err) {
-      _this.emit('error', "error deleting key: " + err);
+      cb && cb("error deleting key: " + err);
     }
-    cb && cb(resp);
+    cb && cb(null, resp);
   });
 };
 
@@ -2024,14 +2052,13 @@ Queue.prototype.exists = function(cb) {
     // meaning that it doesn't actually exist
     _this.connection.exists(_this.metadataKey, function(err, exists) {
       if (err) {
-        _this.emit('error', "error checking if queue exists: " + err);
+        cb && cb("error checking if queue exists: " + err);
         return;
       }
-      cb && cb(exists === 1);
+      cb && cb(null, exists === 1);
     });
   }
   this._connect(_exists);
-
 };
 
 /**
@@ -2039,13 +2066,12 @@ Queue.prototype.exists = function(cb) {
  * @param cb receives the number of messages in the queue
  */
 Queue.prototype.count = function(cb) {
-  var _this = this;
   this.connection.llen(this.messagesKey, function(err, count) {
     if (err) {
-      _this.emit('error', "error getting number of messages in queue: " + err);
+      cb && cb("error getting number of messages in queue: " + err);
       return;
     }
-    cb && cb(count);
+    cb && cb(null, count / 2);
   });
 };
 
@@ -2053,8 +2079,8 @@ Queue.prototype.count = function(cb) {
 /**
  * Empty the queue, removing all messages.
  */
-Queue.prototype.flush = function() {
-  this._deleteKey(this.messagesKey);
+Queue.prototype.flush = function(cb) {
+  this._deleteKey(this.messagesKey, cb);
 };
 
 /**
@@ -2086,30 +2112,46 @@ Queue.prototype.push = function(message, cb) {
   // use a multi command
   var multi = this.connection.multi();
 
+  // extend the keys life
+  this._touch(multi);
+
   // push the message
   multi.evalsha(this.bus._script('push'), 2, this.messagesKey, this.messageIdKey, message, function(err, resp) {
     if (err) {
-      _this.emit('error', "error pushing to queue (push): " + err);
+      if (cb) {
+        cb(err);
+        cb = null;
+      } else {
+        _this.emit('error', "error pushing to queue (push): " + err);
+      }
+      return;
     }
     messageId = resp;
   });
 
-  // extend the keys life
-  this._touch(multi);
-
   // publish a notification that the message is pushed
   multi.publish(this.messageAvailableChannel, pushed, function(err, resp) {
     if (err) {
-      _this.emit('error', "error pushing to queue (publish): " + err);
+      if (cb) {
+        cb(err);
+        cb = null;
+      } else {
+        _this.emit('error', "error pushing to queue (publish): " + err);
+      }
       return;
     }
-    cb && cb(messageId);
+    cb && cb(null, messageId);
   });
 
   // execute the multi command
   return multi.exec(function(err) {
     if (err) {
-      _this.emit('error', "error pushing to queue (exec): " + err);
+      if (cb) {
+        cb(err);
+        cb = null;
+      } else {
+        _this.emit('error', "error pushing to queue (exec): " + err);
+      }
     }
   });
 
@@ -2120,7 +2162,7 @@ Queue.prototype.push = function(message, cb) {
  * @returns {number}
  */
 Queue.prototype.pushed = function(cb) {
-  cb && cb(this._pushed);
+  cb && cb(null, this._pushed);
   return this._pushed;
 };
 
@@ -2129,7 +2171,7 @@ Queue.prototype.pushed = function(cb) {
  * @returns {number}
  */
 Queue.prototype.consumed = function(cb) {
-  cb && cb(this._consumed);
+  cb && cb(null, this._consumed);
   return this._consumed;
 };
 
@@ -2162,7 +2204,7 @@ Queue.prototype.stop = function() {
  * Returns true of this queue is consuming messages
  */
 Queue.prototype.isConsuming = function(cb) {
-  cb && cb(this.consuming);
+  cb && cb(null, this.consuming);
   return this.consuming;
 };
 
@@ -2329,14 +2371,19 @@ Queue.prototype.consume = function(options) {
 /**
  * Signal ack to messages up to the specified id. ignored if not consuming in reliable mode
  * @param id the message id to ack causing all previous messages to be acked as well
+ * @param cb invoked when the ack is complete
  */
-Queue.prototype.ack = function(id) {
+Queue.prototype.ack = function(id, cb) {
   if (this._consumeOptions.reliable) {
     var _this = this;
     this._consumeOptions.last = id;
     _this.connection.evalsha(_this.bus._script('ack'), 1, _this.messagesToAckKey, this._consumeOptions.last, function(err, resp) {
       if (err) {
-        _this.emit('error', 'error acking message id ' + id + ': ' + err);
+        if (cb) {
+          cb(err);
+        } else {
+          _this.emit('error', 'error acking message id ' + id + ': ' + err);
+        }
       }
     });
   }

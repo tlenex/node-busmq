@@ -409,7 +409,10 @@ describe('Bus', function() {
           });
           p.on('attached', function() {
             // push a message
-            p.push(testMessage);
+            p.push(testMessage, function(err, id) {
+              Should(err).be.exactly(null);
+              Should(id).be.exactly(1);
+            });
             p.detach();
           });
           p.attach();
@@ -600,7 +603,8 @@ describe('Bus', function() {
           p.on('detached', function() {
             setTimeout(function() {
               // ttl is 2 seconds, we re-attach after 1 second
-              p.exists(function(exists) {
+              p.exists(function(err, exists) {
+                Should(err).be.exactly(null);
                 exists.should.be.exactly(true);
                 bus.disconnect();
               });
@@ -649,7 +653,8 @@ describe('Bus', function() {
             c.on('detached', function() {
               // ttl is 1 second, so the queue must be expired after 1.5 seconds
               setTimeout(function() {
-                c.exists(function(exists) {
+                c.exists(function(err, exists) {
+                  Should(err).be.exactly(null);
                   exists.should.be.exactly(false);
                   bus.disconnect();
                 });
@@ -820,7 +825,7 @@ describe('Bus', function() {
       bus.connect();
     });
 
-    it('flush messages', function(done) {
+    it('count and flush messages', function(done) {
       var testMessage = 'test message';
       var bus = Bus.create({redis: redisUrls, logger: console});
       bus.on('error', done);
@@ -834,7 +839,8 @@ describe('Bus', function() {
           q.on('error', done);
           q.on('attached', function(exists) {
             exists.should.be.exactly(true);
-            q.count(function(count) {
+            q.count(function(err, count) {
+              Should(err).be.exactly(null);
               count.should.be.exactly(0);
               q.detach();
             });
@@ -845,10 +851,24 @@ describe('Bus', function() {
           q.attach();
         });
         p.on('attached', function() {
-          p.push(testMessage);
-          p.push(testMessage);
-          p.push(testMessage);
-          setImmediate(function() {p.detach();p.flush();});
+          p.push(testMessage, function(err, id) {
+            Should(err).be.exactly(null);
+            id.should.be.exactly(1);
+          });
+          p.push(testMessage, function(err, id) {
+            Should(err).be.exactly(null);
+            id.should.be.exactly(2);
+          });
+          p.push(testMessage, function(err, id) {
+            Should(err).be.exactly(null);
+            id.should.be.exactly(3);
+            p.count(function(err, count) {
+              Should(err).be.exactly(null);
+              count.should.be.exactly(3);
+              p.detach();
+              p.flush();
+            })
+          });
         });
         p.attach({ttl: 1});
       });
@@ -1019,9 +1039,9 @@ describe('Bus', function() {
         q.on('attached', function() {
           q.metadata(key1, value1, function() {
             q.metadata(key2, value2, function() {
-              q.metadata(key1, function(val1) {
+              q.metadata(key1, function(err, val1) {
                 val1.should.be.exactly(value1);
-                q.metadata(key2, function(val2) {
+                q.metadata(key2, function(err, val2) {
                   val2.should.be.exactly(value2);
                   q.detach();
                 });

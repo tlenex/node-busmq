@@ -5,6 +5,18 @@
 A high performance, highly available and scalable, message bus and queueing system for node.js.
 Message queues are backed by [Redis](http://redis.io/), a high performance, in-memory key/value store.
 
+### Important Note!
+
+*Version 1.0.0 introduces a breaking change* in the format of method callbacks. Event callbacks have not changed.
+
+Starting from version 1.0.0, all callbacks that receive a result of a method invocation (such as queue.push) now
+take an error as the first argument instead of the result.
+Previous busmq versions relied on the `error` event being fired on an object to specify the error instead of
+passing the error in context of the method invocation.
+
+This was done in order to better adhere to the node way of handling errors.
+Thanks to [ChiperSoft](https://github.com/ChiperSoft) for pointing this out!
+
 ### The Basics
 
 * Event based message queues
@@ -705,10 +717,13 @@ Detach from the queue. The queue will continue to live for as long as it has at 
 Once a queue has no more attachments, it will continue to exist for the predefined `ttl`, or until it
 is attached to again.
 
-##### queue#push(message)
+##### queue#push(message[, callback])
 
 Push a message to the queue. The message can be a JSON object or a string. 
 The message will remain in the queue until it is consumed by a consumer.
+
+* `message` - the message to push
+* `callback` - invoked after the message was actually pushed to the queue. receives `err` and the `id` of the pushed message
 
 ##### queue#consume([options])
 
@@ -726,16 +741,19 @@ calling `consume` again. see `queue#ack` for ack details. default is `false`.
 if any messages still exist in the queue with id's lower than `last` they will be discarded.
 this behaves exactly like calling `queue#ack` with the last id before starting to consume. default is 0.
 
-##### queue#ack(id)
+##### queue#ack(id[, callback])
 
 Specifies that the message with the specified id, and all messages with lower id's, can safely be discarded so that
 they should never be consumed again. Ignored if not consuming in reliable mode.
 
 * `id` - the message id to ack
+* `callback` - invoked after the message was actually acked. receives `err`.
 
 ##### queue#isConsuming([callback])
 
 Returns `true` if this client is consuming messages, `false` otherwise.
+
+* `callback` - receives `err` and the consuming state
 
 ##### queue#stop()
 
@@ -745,27 +763,29 @@ Stop consuming messages from the queue.
 
 Closes the queue and destroys all messages. Emits the `closed` event once it is closed.
 
-##### queue#flush()
+##### queue#flush([callback])
 
 Empty the queue, removing all messages.
+
+* `callback` - invoked after the queue was flushed. receives `err`.
 
 ##### queue#exists([callback])
 
 Checks if the queue already exists or not.
 
-* `callback` - receives `true` if the queue exists, `false` otherwise
+* `callback` - receives `err` and result `true` if the queue exists, `false` otherwise
 
 ##### queue#count([callback])
 
-Returns the number if messages in the queue.
+Get the number if messages in the queue.
 
-* `callback` - receives the number of messages in the queue
+* `callback` - receives `err` and the number of messages in the queue
 
 ##### queue#ttl([callback])
 
-Returns the time in seconds for the queue to live without any attachments.
+Get the time in seconds for the queue to live without any attachments.
 
-* `callback` - receives the ttl in seconds
+* `callback` - receives `err` and the ttl in seconds
 
 ##### queue#metadata(key [, value][, callback])
 
@@ -774,16 +794,20 @@ Will set the metadata `key` to the provided `value`, or get the current value of
 
 * `key` - the metadata key to set or get
 * `value` - \[optional\] the value to set on the key.
-* `callback` - if setting a metadata value, it is called with no arguments upon success. if retrieving the value,
- it be called with the retrieved value.
+* `callback` - receives `err` as the first argument. if setting a metadata value, it is called with no further arguments.
+if retrieving the value, it is called with the retrieved value.
 
 ##### queue#pushed([callback])
 
 Returns the number of messages pushed by this client to the queue
 
+* `callback` - receives `err` and the number of pushed messages
+
 ##### queue#consumed([callback])
 
 Returns the number of messages consumed by this client from the queue
+
+* `callback` - receives `err` and the number of consumed messages
 
 #### Queue Events
 
@@ -812,13 +836,20 @@ Alias to `channel#connect()`
 Connects to the channel with reverse semantics of the roles. 
 The `connect` event is emitted once connected to the channel.
 
-##### channel#send(message)
+##### channel#send(message[, callback])
 
 Send a message to the peer. The peer does need to be connected for a message to be sent.
 
-##### channel#sendTo(endpoint, message)
+* `message` - the message to send
+* `callback` - invoked after the message was actually pushed to the channel. receives `err` and the `id` of the pushed message
+
+##### channel#sendTo(endpoint, message[, callback])
 
 Send a message to the the specified endpoint. There is no need to connect to the channel with `channel#connect` or `channel#listen`.
+
+* `endpoint` - the target endpoint to receive the message
+* `message` - the message to send
+* `callback` - invoked after the message was actually pushed to the channel. receives `err` and the `id` of the pushed message
 
 ##### channel#disconnect()
 
@@ -832,7 +863,7 @@ Alias to `channel#disconnect()`
 
 End the channel. No more messages can be pushed or consumed. This also caused the peer to disconnect from the channel and close the message queues.
 
-##### channel#ack(id)
+##### channel#ack(id[, callback])
 
 See [queue#ack](#queueackid) for details
 
@@ -852,9 +883,12 @@ Returns `true` if connected to the channel, `false` if not connected.
 
 ### Pubsub API
 
-##### pubsub#publish(message)
+##### pubsub#publish(message[, callback])
 
 Publishes a message on the pubsub channel. Only currently subscribed clients will receive the message.
+
+* `message` - the message to publish
+* `callback` - invoked after the message was actually published. receives `err` if there was an error publishing.
 
 ##### pubsub#subscribe()
 
@@ -877,17 +911,17 @@ Returns `true` if subscribed to messages from the pubsub channel, `false` if not
 
 ### Persistable API
 
-##### persistable#save(callback)
+##### persistable#save([callback])
 
 Save all the dirty properties. The dirty properties are marked as not dirty after the save completes.
 
-* `callback` - called when the save has finished. has the form `function(err, id)` where `id` is the object id that was saved.
+* `callback` - called when the save has finished. receives `err` if there was an error.
 
-##### persistable#load(callback)
+##### persistable#load([callback])
 
 Load all the tracked properties. All properties are marked as not dirty after the load completes.
 
-* `callback`  - called when the load has finished. has the form `function(err, exists, id)`
+* `callback`  - called when the load has finished. receives `err`, `exists` and `id`
 where `exists` is true if the persisted object was found in the bus and `id` is the id of the object whose data was searched.
 
 ##### persistable#persist(ttl)
