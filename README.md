@@ -390,6 +390,7 @@ using the [dnode](https://github.com/substack/dnode) module for RPCing the objec
 #### Opening a bus with a federation server
 
 ```javascript
+// this server is running on 192.168.0.1
 var http = require('http');
 var httpServer = http.createServer(); // create the http server to serve as the federation server. you can also use express if you like...
 httpServer.listen(8881);
@@ -399,7 +400,7 @@ var options = {
   federate: { // also open a federation server
     server: httpServer,  // use the provided http server as the federation server
     secret: 'mysecret',   // a secret key for authorizing clients
-    path: '/my/fed/path'
+    path: '/my/fed/path' // the federation service is accessible on this path in the server
   }
 };
 var bus = Bus.create(options);
@@ -414,18 +415,16 @@ bus.connect();
 ```javascript
 var Bus = require('busmq');
 var options = {
-  redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: { // also connect to a federate bus
+  federate: { // connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret',  // the secret ket to authorize with the federation server
-    path: '/my/fed/path'
+    urls: ['http://192.168.0.1:8881/my/fed/path'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the queue to a bus located at a different data center
- var fed = bus.federate(bus.queue('foo'), 'http://my.other.bus');
+ var fed = bus.federate(bus.queue('foo'), 'http://192.168.0.1:8881/my/fed/path');
  fed.on('ready', function(q) {
    // federation is ready - we can start using the queue
    q.on('attached', function() {
@@ -434,6 +433,7 @@ bus.on('online', function() {
    q.attach();
  });
 });
+bus.connect();
 ```
 
 #### Federating a channel
@@ -441,18 +441,16 @@ bus.on('online', function() {
 ```javascript
 var Bus = require('busmq');
 var options = {
-  redis: 'redis://127.0.0.1', // connect this bus to a local running redis
-  federate: { // also connect to a federate bus
+  federate: { // connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret',  // the secret ket to authorize with the federation server
-    path: '/my/fed/path'
+    urls: ['http://192.168.0.1:8881/my/fed/path'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the channel to a bus located at a different data center
- var fed = bus.federate(bus.channel('bar'), 'http://my.other.bus');
+ var fed = bus.federate(bus.channel('bar'), 'http://192.168.0.1:8881/my/fed/path');
  fed.on('ready', function(c) {
    // federation is ready - we can start using the channel
    c.on('message', function(message) {
@@ -461,6 +459,7 @@ bus.on('online', function() {
    c.attach();
  });
 });
+bus.connect();
 ```
 
 #### Federating a persistable object
@@ -468,18 +467,16 @@ bus.on('online', function() {
 ```javascript
 var Bus = require('busmq');
 var options = {
-  redis: 'http://127.0.0.1', // connect this bus to a local running redis
-  federate: { // also connect to a federate bus
+  federate: { // connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret',  // the secret ket to authorize with the federation server
-    path: '/my/fed/path'
+    urls: ['http://192.168.0.1:8881/my/fed/path'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the persistent object to a bus located at a different data center
- var fed = bus.federate(bus.persistify('bar', object, ['field1', 'field2']), 'http://my.other.bus');
+ var fed = bus.federate(bus.persistify('bar', object, ['field1', 'field2']), 'http://192.168.0.1:8881/my/fed/path');
  fed.on('ready', function(p) {
    // federation is ready - we can start using the persisted object
    p.load(function(err, exists) {
@@ -487,6 +484,7 @@ bus.on('online', function() {
    });
  });
 });
+bus.connect();
 ```
 
 #### Federating a pubsub
@@ -494,18 +492,16 @@ bus.on('online', function() {
 ```javascript
 var Bus = require('busmq');
 var options = {
-  redis: 'redis://127.0.0.1', // connect this bus to a local running redis
   federate: { // also connect to a federate bus
     poolSize: 5, // keep the pool size with 5 web sockets
-    urls: ['http://my.other.bus:8881'],  // pre-connect to these urls, 5 web sockets to each url
-    secret: 'mysecret',  // the secret ket to authorize with the federation server
-    path: '/my/fed/path'
+    urls: ['http://192.168.0.1:8881/my/fed/path'],  // pre-connect to these urls, 5 web sockets to each url
+    secret: 'mysecret'  // the secret ket to authorize with the federation server
   }
 };
 var bus = Bus.create(options);
 bus.on('online', function() {
  // federate the channel to a bus located at a different data center
- var fed = bus.federate(bus.pubsub('bar'), 'http://my.other.bus');
+ var fed = bus.federate(bus.pubsub('bar'), 'http://192.168.0.1:8881/my/fed/path');
  fed.on('ready', function(p) {
    // federation is ready - we can start using pubsub
    p.on('message', function(message) {
@@ -515,6 +511,7 @@ bus.on('online', function() {
    p.publish('foo bar');
  });
 });
+bus.connect();
 ```
 
 ## Performance
