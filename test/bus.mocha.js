@@ -1437,6 +1437,7 @@ describe('Bus', function() {
     });
 
     afterEach(function(done) {
+      fedserver.on('error', function() {}); // ignore socket errors at this point
       fedserver && fedserver.close();
       done();
     });
