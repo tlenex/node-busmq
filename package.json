@@ -35,7 +35,7 @@
   "optionalDependencies": {
     "ws": "0.8.0",
     "websocket-stream": "1.4.0",
-    "dnode": "1.2.1"
+    "dnode": "1.2.2"
   },
   "devDependencies": {
     "should": "4.0.4",
