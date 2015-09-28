@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "0.10"
   - "0.12"
-  - "4"
+  - "4.0"
 before_install:
   - wget http://download.redis.io/releases/redis-2.8.19.tar.gz
   - tar xzf redis-2.8.19.tar.gz
