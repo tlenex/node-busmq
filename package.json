@@ -29,12 +29,11 @@
     "delivery"
   ],
   "dependencies": {
-    "hiredis": "0.4.1",
     "redis": "0.12.1"
   },
   "optionalDependencies": {
     "ws": "0.8.0",
-    "websocket-stream": "1.4.0",
+    "websocket-stream": "2.0.2",
     "dnode": "1.2.2"
   },
   "devDependencies": {
