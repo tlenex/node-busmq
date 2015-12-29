@@ -885,7 +885,7 @@ Returns `true` if connected to the channel, `false` if not connected.
 Publishes a message on the pubsub channel. Only currently subscribed clients will receive the message.
 
 * `message` - the message to publish
-* `callback` - invoked after the message was actually published. receives `err` if there was an error publishing.
+* `callback` - invoked after the message was actually published. receives `err` and the number of subscribers that received the message. 
 
 ##### pubsub#subscribe()
 

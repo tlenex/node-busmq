@@ -1401,10 +1401,13 @@ describe('Bus', function() {
         var s = bus.pubsub(qName);
         s.on('error', done);
         s.on('message', function(message) {
-          if (_count() === 1) {
+          var c = _count();
+          if (c === 1) {
             message.should.be.exactly('hello');
           } else {
             message.should.be.exactly('world');
+          }
+          if (c === 3) {
             s.unsubscribe();
           }
         });
@@ -1415,8 +1418,17 @@ describe('Bus', function() {
           // create publisher
           var p = bus.pubsub(qName);
           p.on('error', done);
-          p.publish('hello');
-          p.publish('world');
+          p.publish('hello', function(err, count) {
+            Should(err).be.exactly(null);
+            count.should.be.exactly(1);
+          });
+          p.publish('world', function(err, count) {
+            Should(err).be.exactly(null);
+            count.should.be.exactly(1);
+            if (_count() === 3) {
+              s.unsubscribe();
+            }
+          });
         });
         s.subscribe();
       });
@@ -1655,10 +1667,13 @@ describe('Bus', function() {
           fed.on('error', done);
           fed.on('ready', function(s) {
             s.on('message', function(message) {
-              if (_count() === 1) {
+              var c = _count();
+              if (c === 1) {
                 message.should.be.exactly('hello');
               } else {
                 message.should.be.exactly('world');
+              }
+              if (c === 3) {
                 s.unsubscribe();
               }
             });
@@ -1672,8 +1687,17 @@ describe('Bus', function() {
               pFed.on('error', done);
               pFed.on('ready', function(p) {
                 p.on('error', done);
-                p.publish('hello');
-                p.publish('world');
+                p.publish('hello', function(err, count) {
+                  Should(err).be.exactly(null);
+                  count.should.be.exactly(1);
+                });
+                p.publish('world', function(err, count) {
+                  Should(err).be.exactly(null);
+                  count.should.be.exactly(1);
+                  if (_count() === 3) {
+                    s.unsubscribe();
+                  }
+                });
               });
             });
             s.subscribe();
