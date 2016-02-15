@@ -1455,7 +1455,7 @@ describe('Bus', function() {
     });
 
     it('federates queue events', function(done) {
-
+      const binaryMessage = new Buffer([1,2,3,4,5,6,101,102,0,150,151,200,0,201,202,203,241,245]).toString('utf8');
       var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
@@ -1483,20 +1483,22 @@ describe('Bus', function() {
               if (state) {
                 q.push('hello');
                 q.push('world');
+                q.push(binaryMessage);
               } else {
                 q.detach();
               }
             });
             q.on('message', function(msg) {
               msgs.push(msg);
-              if (msgs.length === 2) {
+              if (msgs.length === 3) {
                 q.stop();
               }
             });
             q.on('detached', function() {
-              msgs.length.should.be.exactly(2);
+              msgs.length.should.be.exactly(3);
               msgs[0].should.be.exactly('hello');
               msgs[1].should.be.exactly('world');
+              msgs[2].should.equal(binaryMessage);
               f.close();
             });
             q.attach();
