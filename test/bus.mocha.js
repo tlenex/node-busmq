@@ -321,7 +321,9 @@ describe('Bus', function() {
                 });
               }, 100);
             });
-            q.attach();
+            setTimeout(function() {
+              q.attach();
+            }, 100);
           });
         }
       });
