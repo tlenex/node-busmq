@@ -1452,8 +1452,10 @@ describe('Bus', function() {
 
     afterEach(function(done) {
       fedserver.on('error', function() {}); // ignore socket errors at this point
-      fedserver && fedserver.close();
-      done();
+      setTimeout(function() {
+        fedserver && fedserver.close();
+        done();
+      }, 100);
     });
 
     it('federates queue events', function(done) {
