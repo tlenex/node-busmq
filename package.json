@@ -30,6 +30,7 @@
   ],
   "dependencies": {
     "hiredis": "0.4.1",
+    "ioredis": "1.15.1",
     "redis": "0.12.1"
   },
   "optionalDependencies": {
