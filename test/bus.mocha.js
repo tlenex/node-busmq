@@ -81,6 +81,11 @@ function stopAllRedises(cb) {
   }
 }
 
+function createBus(options) {
+  options.driver = global.driver;
+  return Bus.create(options);
+}
+
 function produceAndConsume(bus, messages, queues, cb) {
   function qDone() {
     if (--queues === 0) {
@@ -224,7 +229,7 @@ describe('Bus', function() {
   describe('bus connection', function() {
 
     it('should emit online event when connected and offline event after disconnecting', function(done) {
-      var bus = Bus.create({redis: redisUrls, logger: console, logLevel: 'debug'});
+      var bus = createBus({redis: redisUrls, logger: console, logLevel: 'debug'});
       bus.on('error', function(err) {
         done(err);
       });
@@ -238,7 +243,7 @@ describe('Bus', function() {
     });
 
     it('should emit error if calling connect twice', function(done) {
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       var dones = 0;
       var onlines = 0;
       bus.on('error', function(err) {
@@ -264,7 +269,7 @@ describe('Bus', function() {
     });
 
     it('should emit offline when the redises go down, and online when they are back again', function(done) {
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       var onlines = 0;
       var offlines = 0;
       var allStopped= false;
@@ -305,7 +310,7 @@ describe('Bus', function() {
     it('should resume silently when redis turns into slave and turns back to master', function(done) {
       var online = 0;
       var offline = 0;
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', function(){});
       bus.on('online', function() {
         ++online;
@@ -342,7 +347,7 @@ describe('Bus', function() {
       function _count() {
         ++count;
       }
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -385,7 +390,7 @@ describe('Bus', function() {
       it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -429,7 +434,7 @@ describe('Bus', function() {
       it('producer attach -> consumer attach -> producer push -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -468,7 +473,7 @@ describe('Bus', function() {
       it('consumer attach -> producer attach -> producer push -> consumer receive', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -510,7 +515,7 @@ describe('Bus', function() {
       it('producer attach -> producer push(5) -> consumer attach -> consumer receive(5)', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -554,7 +559,7 @@ describe('Bus', function() {
       it('producer push(5) -> producer attach -> consumer attach -> consumer receive(5)', function(done) {
         var testMessage = 'test message';
         var consumed = 0;
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -595,7 +600,7 @@ describe('Bus', function() {
 
       it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
         var testMessage = 'test message';
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -635,7 +640,7 @@ describe('Bus', function() {
 
       it('queue should expire: producer attach -> consumer attach -> producer push -> detach all', function(done) {
         var testMessage = 'test message';
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var qName = 'test'+Math.random();
@@ -677,7 +682,7 @@ describe('Bus', function() {
       });
 
       function testManyMessages(messages, queues, done) {
-        var bus = Bus.create({redis: redisUrls, logger: console});
+        var bus = createBus({redis: redisUrls, logger: console});
         bus.on('error', done);
         bus.on('online', function() {
           var time = process.hrtime();
@@ -714,7 +719,7 @@ describe('Bus', function() {
     it('consume max', function(done) {
       var testMessage = 'test message';
       var consumed = 0;
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -771,7 +776,7 @@ describe('Bus', function() {
     it('consume without removing', function(done) {
       var testMessage = 'test message';
       var consumed = 0;
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -829,7 +834,7 @@ describe('Bus', function() {
 
     it('count and flush messages', function(done) {
       var testMessage = 'test message';
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -882,7 +887,7 @@ describe('Bus', function() {
 
     it('should not receive additional messages if stop was called', function(done) {
       var consumed = 0;
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -927,7 +932,7 @@ describe('Bus', function() {
 
     it('consume reliable', function(done) {
       var consumed = 0;
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -1029,7 +1034,7 @@ describe('Bus', function() {
       var value1 = 'value1';
       var key2 = 'key2';
       var value2 = 'value2';
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test'+Math.random();
@@ -1067,7 +1072,7 @@ describe('Bus', function() {
       var testMessage = 'test message';
       var sEvents = {'message': 0};
       var cEvents = {'message': 0};
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var cName = 'test'+Math.random();
@@ -1139,7 +1144,7 @@ describe('Bus', function() {
       var testMessage = 'test message';
       var sEvents = {'message': 0};
       var cEvents = {'message': 0};
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var cName = 'test'+Math.random();
@@ -1210,7 +1215,7 @@ describe('Bus', function() {
     it('reliable channel', function(done) {
       var sEvents = {msg: 0};
       var cEvents = {msg: 0};
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var cName = 'test'+Math.random();
@@ -1298,7 +1303,7 @@ describe('Bus', function() {
   describe('persistency', function() {
 
     it('saves and loads an object', function(done) {
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var object = bus.persistify('data1', {}, ['field1', 'field2', 'field3']);
@@ -1329,7 +1334,7 @@ describe('Bus', function() {
     });
 
     function testManySavesAndLoades(objects, done) {
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         function _done() {
@@ -1395,7 +1400,7 @@ describe('Bus', function() {
         return ++count;
       }
 
-      var bus = Bus.create({redis: redisUrls, logger: console});
+      var bus = createBus({redis: redisUrls, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         var qName = 'test' + Math.random();
@@ -1460,13 +1465,13 @@ describe('Bus', function() {
 
     it('federates queue events', function(done) {
       const binaryMessage = new Buffer([1,2,3,4,5,6,101,102,0,150,151,200,0,201,202,203,241,245]).toString('utf8');
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1524,13 +1529,13 @@ describe('Bus', function() {
     });
 
     it('federates channel events', function(done) {
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1583,13 +1588,13 @@ describe('Bus', function() {
     });
 
     it('federates persisted objects', function(done) {
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1655,13 +1660,13 @@ describe('Bus', function() {
         return ++count;
       }
 
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5} });
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5} });
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1726,13 +1731,13 @@ describe('Bus', function() {
     it('federation websocket of queue closes and reopens', function(done) {
 
       var bus2;
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create the bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1764,7 +1769,7 @@ describe('Bus', function() {
                   // create the other bus to listen for ws connections to simulate multiple processes
                   fedserver = http.createServer();
                   fedserver.listen(9777);
-                  bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+                  bus2 = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
                   bus2.on('error', function(err) {
                     done(err);
                   });
@@ -1817,13 +1822,13 @@ describe('Bus', function() {
     it('federation websocket of channel closes and reopens', function(done) {
 
       var bus2;
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create the bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 1 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1871,7 +1876,7 @@ describe('Bus', function() {
             // create the other bus to listen for ws connections to simulate multiple processes
             fedserver = http.createServer();
             fedserver.listen(9777);
-            bus2 = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+            bus2 = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
             bus2.on('error', function(err) {
               done(err);
             });
@@ -1902,13 +1907,13 @@ describe('Bus', function() {
     });
 
     it('does not allow federation with wrong secret', function(done) {
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, secret: 'thisisit'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, secret: 'thisisit'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5, secret: 'thisisNOTit' }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777'], poolSize: 5, secret: 'thisisNOTit' }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1938,13 +1943,13 @@ describe('Bus', function() {
     });
 
     function testManyMessagesOverFederation(messages, queues, done) {
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', function(err) {
         done(err);
       });
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', function(err) {
           done(err);
         });
@@ -1986,11 +1991,11 @@ describe('Bus', function() {
 
     function testManySavesAndLoadesOverFederation(objects, done) {
       var total = objects;
-      var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      var bus = createBus({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
       bus.on('error', done);
       bus.on('online', function() {
         // create a second bus to federate requests
-        var busFed = Bus.create({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
+        var busFed = createBus({redis: redisUrls, logger: console, federate: {urls: ['http://127.0.0.1:9777/federate'], poolSize: 5 }});
         busFed.on('error', done);
         busFed.on('online', function() {
 
