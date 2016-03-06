@@ -29,6 +29,7 @@ Thanks to [ChiperSoft](https://github.com/ChiperSoft) for pointing this out!
 * Scalability through the use of multiple redis instances and node processes
 * High availability through redis master-slave setup and stateless node processes
 * Tolerance to dynamic addition of redis instances during scale out
+* Choice of connection driver - [node_redis](https://github.com/NodeRedis/node_redis) or [ioredis](https://github.com/luin/ioredis) (thanks to [bgrieder](https://github.com/bgrieder))
 * Connect to the bus from a browser
 * Fast
 
@@ -612,7 +613,9 @@ Phew, that was long. Let's see the API.
 
 Create a new bus instance. Options:
 
-* `redis` -  specified the redis servers to connect to. Can be a string or an array of string urls.
+* `driver` -  specify the redis connection driver to use.
+              This should be either `require('redis')` or `require('ioredis')`. The default is `require('redis')`
+* `redis` -  specifies the redis servers to connect to. Can be a string or an array of string urls.
              A valid url has the form `redis://[auth_pass@]<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
   * `server` -  an http/https server object to listen for incoming federation connections. if undefined then federation server will not be open
