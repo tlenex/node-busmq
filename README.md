@@ -68,13 +68,12 @@ High availability for redis is achieved by using standard redis high availabilit
 ## Bus
 
 The bus holds connections to one or more redis instances and is used
-to create `queue`s, `channel`s and `persistent` objects.
+to create `queue`s, `channel`s, `pubsub`s and `persistent` objects.
 
-Node processes connecting to the same bus have access to and can use all queues, channels and persistent objects.
+Node processes connecting to the same bus have access to and can use all queues, channels pubsubs and persistent objects.
 
-node-busmq uses the great [node_redis](https://github.com/mranney/node_redis) module to communicate with the redis instances,
-so it is highly recommended to also install [hiredis](https://github.com/redis/hiredis-node) to
-achieve the best performance.
+busmq uses by default [node_redis](https://github.com/mranney/node_redis) as the communication driver,
+bu ioredis may also be used. Use the `driver` option when creating the bus instance to specify the driver.
 
 If the redis server requires an authentication password, specify it in auth part of the redis connection url.
 
@@ -82,7 +81,13 @@ If the redis server requires an authentication password, specify it in auth part
 
 ```javascript
 var Bus = require('busmq');
+
 var bus = Bus.create({redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// or specify the node_redis driver explicitly
+// var bus = Bus.create({driver: require('redis'), redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// or specify the ioredis driver explicitly
+// var bus = Bus.create({driver: require('ioredis'), redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+
 bus.on('error', function(err) {
   // an error has occurred
 });
