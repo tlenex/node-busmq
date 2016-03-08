@@ -1,3 +1,7 @@
+
+//BGR: Only kept for reference - Tests are now split in multiple files 
+
+/*
 var http = require('http');
 var crypto = require('crypto');
 var Should = require('should');
@@ -2073,3 +2077,4 @@ describe('Bus', function() {
 
   });
 });
+  */

@@ -41,7 +41,7 @@ RedisHelper.prototype.open = function() {
 
   function parse(value) {
     var t = value.split(':')
-      , k = t[0].toLowerCase().replace(strRE, '')
+      , k = t[0].toLowerCase().replace(strRE, '');
 
     switch (k) {
       case 'alreadyinuse':
@@ -75,6 +75,7 @@ RedisHelper.prototype.open = function() {
   }
 
   this.process.stdout.on('data', function (data) {
+    console.log('<==== Redis Port: '+self.port, data.toString());
     var matches = data.toString().match(keyRE);
 
     if (matches !== null) {
@@ -88,9 +89,9 @@ RedisHelper.prototype.open = function() {
     self.isClosing = false;
   });
 
-  process.on('exit', function () {
-    self.close();
-  });
+  // process.on('exit', function () {
+  //   self.close();
+  // });
 
   return true;
 };
@@ -105,6 +106,7 @@ RedisHelper.prototype.slaveOf = function(port, callback) {
 
 RedisHelper.prototype.close = function(callback) {
   if (this.isClosing || this.process === null) {
+    console.log('XXXXXXXXXXXXX HHHHHHEEEERRRR '+this.isClosing, this.process);
     if (callback) {
       callback(null);
     }
@@ -127,6 +129,7 @@ RedisHelper.prototype.close = function(callback) {
 
 function open(port, auth, callback) {
   var helper = new RedisHelper(port, auth);
+  // helper.open(helper, callback);
   RedisHelper.prototype.open.apply(helper, callback);
   return helper;
 }
