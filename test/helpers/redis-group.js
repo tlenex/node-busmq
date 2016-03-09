@@ -10,31 +10,16 @@ function RedisGroup(ports, auths) {
   this.redises= {};
 }
 
-function startRedis(port, auth, done) {
-  console.log('--starting redis on port ' + port + ' with auth ' + auth + '');
-  var redis = redisHelper.open(port, auth);
-  this.redises[port]=redis;
-  redis.on('error', function(err) {
-    console.error('--failed starting redis on port ' + port + ', error:  '+err.message+' ');
-    done(new Error(err));
-  });
-  redis.on('ready', function() {
-    console.log('--redis on port ' + port + ' started');
-    done();
-  });
-}
 
-function stopRedis(port, done) {
-  var redis = this.redises[port];
+
+function stopRedis(args, done) {
+  var redis = this.redises[args];
   var _this = this;
   if (typeof redis === 'undefined') {
-    console.log('--redis on port '+redis.port+' is already closed');
     done();
   }
-  console.log('--closing redis on port '+redis.port+'');
   redis.close(function() {
-    console.log('--redis on port '+redis.port+' closed');
-    delete _this.redises[port];
+    delete _this.redises[args];
     done();
   });
 }
@@ -43,16 +28,24 @@ function stopRedis(port, done) {
 RedisGroup.prototype.start = function(done) {
   var started = 0;
   var _this = this;
-  this.ports.forEach(function(port, i) {
-    startRedis.call(_this, port, _this.auths[i], function(err) {
+  this.ports.forEach(function(port,i) {
+
+    var args = ['--port', port];
+    if (_this.auths[i]) {
+      args.push('--requirepass');
+      args.push(_this.auths[i]);
+    }
+    
+    redisHelper.open(args, function(err, redis){
       if (err) {
         done && done(err);
         return
       }
+      _this.redises[port] = redis;
       if (++started === _this.ports.length) {
         done && done()
       }
-    })
+    });
   })
 };
 
@@ -78,7 +71,7 @@ RedisGroup.prototype.makeSlave = function(slavePort, masterPort, done) {
       done(err);
     });
   } else {
-    console.log('--changing redis ' + slavePort + ' to master>');
+    // console.log('--changing redis ' + slavePort + ' to master');
     slave.slaveOf(null, function(err) {
       if (!err) console.log('--redis on '+slavePort+' is now a master');
       done(err);

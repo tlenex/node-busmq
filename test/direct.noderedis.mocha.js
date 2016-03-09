@@ -8,7 +8,7 @@ var http = require('http');
 var crypto = require('crypto');
 var Bus = require('../lib/bus');
 var tf = require('./test.functions');
-var RedisGroup = require('./redis-group');
+var RedisGroup = require('./helpers/redis-group');
 
 
 var redises = [];

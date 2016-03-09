@@ -5,13 +5,11 @@ var events = require('events');
 var redis = require('redis');
 
 var childProcess = require('child_process')
-  , keyRE = /(port:\s+\d+)|(pid:\s+\d+)|(already\s+in\s+use)|(not\s+listen)|error|denied|(server\s+is\s+now\s+ready)/ig
+  , keyRE = /(port:\s+\d+)|(pid:\s+\d+)|(already\s+in\s+use)|(not\s+listen)|error|denied|(server\s+is\s+now\s+ready)|(sentinel\s+runid)/ig
   , strRE = / /ig;
 
-function RedisHelper(port, auth) {
+function RedisHelper() {
   this.pid = null;
-  this.port = port;
-  this.auth = auth;
   this.process = null;
   this.isClosing = false;
   this.isRunning = false;
@@ -20,22 +18,14 @@ function RedisHelper(port, auth) {
 
 util.inherits(RedisHelper, events.EventEmitter);
 
-RedisHelper.prototype.open = function() {
+RedisHelper.prototype.open = function(args, done) {
   if (this.isOpening || this.process !== null) {
-    if (callback) {
-      callback(null);
-    }
-
-    return false;
+    this.emit('error', 'Already running');
+    return this;
   }
 
-  var self = this;
+  var _this = this;
 
-  var args = ['--port', this.port];
-  if (this.auth) {
-    args.push('--requirepass');
-    args.push(this.auth);
-  }
   this.process = childProcess.spawn('redis-server', args);
   this.isOpening = true;
 
@@ -45,68 +35,80 @@ RedisHelper.prototype.open = function() {
 
     switch (k) {
       case 'alreadyinuse':
-        self.isOpening = false;
-        return self.emit('error', 'Address already in use');
+        _this.isOpening = false;
+        return _this.emit('error', 'Address already in use');
 
       case 'denied':
-        self.isOpening = false;
-        return self.emit('error', 'Permission denied');
+        _this.isOpening = false;
+        return _this.emit('error', 'Permission denied');
 
       case 'error':
       case 'notlisten':
-        self.isOpening = false;
-        return self.emit('error', 'Invalid port number');
+        _this.isOpening = false;
+        return _this.emit('error', 'Invalid port number');
 
       case 'serverisnowready':
-        self.isOpening = false;
-        self.client = redis.createClient(self.port, '127.0.0.1', {auth_pass: self.auth});
-        return self.emit('ready');
+      case 'sentinelrunid':
+        _this.isOpening = false;
+        // _this.client = redis.createClient(_this.port, '127.0.0.1', {auth_pass: _this.auth});
+        return _this.emit('ready');
 
       case 'pid':
       case 'port':
-        self[k] = Number(t[1]);
+        _this[k] = Number(t[1]);
 
-        if (!(self.port === null || self.pid === null)) {
-          self.isRunning = true;
-          self.isOpening = false;
+        if (!(_this.port === null || _this.pid === null)) {
+          _this.isRunning = true;
+          _this.isOpening = false;
           break;
         }
     }
   }
 
   this.process.stdout.on('data', function (data) {
-    console.log('<==== Redis Port: '+self.port, data.toString());
+    console.log('<==== Redis pid: '+_this.process.pid+'\n'+data.toString()+'\n');
     var matches = data.toString().match(keyRE);
-
     if (matches !== null) {
       matches.forEach(parse);
     }
   });
 
   this.process.on('close', function () {
-    self.process = null;
-    self.isRunning = false;
-    self.isClosing = false;
+    _this.process = null;
+    _this.isRunning = false;
+    _this.isClosing = false;
+  });
+
+  this.on('error', function(err) {
+    done(new Error(err));
+  });
+
+  this.on('ready', function() {
+    done(null, _this);
   });
 
   // process.on('exit', function () {
   //   self.close();
   // });
 
-  return true;
+  return this;
 };
 
 RedisHelper.prototype.slaveOf = function(port, callback) {
+  var client = redis.createClient(this.port, '127.0.0.1');
+  function cb() {
+    client.end();
+    callback();
+  };
   if (port) {
-    this.client.slaveof('127.0.0.1', port, callback);
+    client.slaveof('127.0.0.1', port, cb);
   } else {
-    this.client.slaveof('no', 'one', callback);
+    client.slaveof('no', 'one', cb);
   }
 };
 
 RedisHelper.prototype.close = function(callback) {
   if (this.isClosing || this.process === null) {
-    console.log('XXXXXXXXXXXXX HHHHHHEEEERRRR '+this.isClosing, this.process);
     if (callback) {
       callback(null);
     }
@@ -127,10 +129,7 @@ RedisHelper.prototype.close = function(callback) {
   return true;
 };
 
-function open(port, auth, callback) {
-  var helper = new RedisHelper(port, auth);
-  // helper.open(helper, callback);
-  RedisHelper.prototype.open.apply(helper, callback);
-  return helper;
+function open(args, done) {
+  return new RedisHelper().open(args, done);
 }
 module.exports = {open: open};

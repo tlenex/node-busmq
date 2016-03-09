@@ -62,10 +62,8 @@ function downAndBack(bus, redisGroup, done) {
   bus.on('error', function(){});
   bus.on('online', function() {
     ++onlines;
-      console.log('XXXXXXXXXX  BUS ONLINE IS '+onlines);
     if (onlines === 1) {
       redisGroup.stop(function() {
-        console.log('XXXXXXXXXXX STOPPED');
         allStopped = true;
         startAll();
       });
@@ -77,7 +75,6 @@ function downAndBack(bus, redisGroup, done) {
   });
   bus.on('offline', function() {
     ++offlines;
-      console.log('XXXXXXXXXX BUS OFFLINES IS '+offlines);
     if (offlines === 1) {
       startAll();
     } else if (offlines === 2) {
