@@ -48,14 +48,14 @@ function connectTwice(bus,done, duplicatePort) {
   bus.connect();
 }
 
-function downAndBack(bus, redisGroup, done) {
+function downAndBack(bus, redisLayout, done) {
   var onlines = 0;
   var offlines = 0;
   var allStopped= false;
 
   function startAll() {
     if (offlines === 1 && allStopped) {
-      redisGroup.start();
+      redisLayout.start();
     }
   }
 
@@ -63,7 +63,7 @@ function downAndBack(bus, redisGroup, done) {
   bus.on('online', function() {
     ++onlines;
     if (onlines === 1) {
-      redisGroup.stop(function() {
+      redisLayout.stop(function() {
         allStopped = true;
         startAll();
       });

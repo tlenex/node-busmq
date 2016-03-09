@@ -105,7 +105,7 @@ RedisSentinels.prototype.start = function(done) {
                 return;
               }
               _this.redises['sentinel3'] = redis;
-              done();
+              done && done();
             });
           });
         });
