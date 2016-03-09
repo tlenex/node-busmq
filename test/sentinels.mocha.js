@@ -1,8 +1,7 @@
 /**
- * This file runs the tests for direct connections to redis(es)
- * Using the node-redis driver and using the ioredis driver
+ * This file runs the tests for a sentinels layout
+ * using the ioredis driver
  */
-
 
 var http = require('http');
 var crypto = require('crypto');

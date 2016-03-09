@@ -39,8 +39,9 @@
     "dnode": "1.2.2"
   },
   "devDependencies": {
+    "mocha": "1.21.4",
     "should": "4.0.4",
-    "mocha": "1.21.4"
+    "suppose": "^0.5.1"
   },
   "browser": {
     "./index.js": "./browser/index.js",
