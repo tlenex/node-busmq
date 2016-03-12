@@ -36,14 +36,20 @@ function startInstance(index, done) {
 }
 
 function initializeCluster(done) {
-  console.log('--Please wait, initializing up cluster....');
+  console.log('--Please wait, initializing cluster....');
   suppose(__dirname+'/redis-trib.rb', ['create', '--replicas', '1', '127.0.0.1:7000', '127.0.0.1:7001', '127.0.0.1:7002', '127.0.0.1:7003', '127.0.0.1:7004', '127.0.0.1:7005'])
     .when(/.*?\(type 'yes' to accept\)\:/).respond('yes\n')
     .on('error', function(err){
       done && done(err);
     })
     .end(function(code){
-      done && done();
+      ///Wait a bit for cluster to settle
+      setTimeout(
+        function() {
+          console.log('XXXXXXXXXXXX END INITIALIZATION XXXXXXXXXXXX');
+          done && done();
+        },
+        2500);
     });
 }
 

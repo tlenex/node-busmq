@@ -44,10 +44,10 @@ describe('BusMQ Cluster', function() {
       tf.connectTwice(bus,done,26379);
     });
 
-    it('should emit offline when the redises go down, and online when they are back again', function(done) {
-      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-      tf.downAndBack(bus, redisCluster, done);
-    });
+    // it('should emit offline when the redises go down, and online when they are back again', function(done) {
+    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+    //   tf.downAndBack(bus, redisCluster, done);
+    // });
 
     // it('should resume silently when redis turns into slave and turns back to master', function(done) {
     //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
@@ -62,89 +62,90 @@ describe('BusMQ Cluster', function() {
       tf.attachDetachEvents(bus,done);
     });
 
-    // describe('pushing and consuming messages', function() {
-    //
-    //   it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.pAttachPPushCAttachCReceive(bus,done);
-    //   });
-    //
-    //   it('producer attach -> consumer attach -> producer push -> consumer receive', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.pAttachCAttachPPushCReceive(bus,done);
-    //   });
-    //
-    //   it('consumer attach -> producer attach -> producer push -> consumer receive', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.cAttachPAttachPPUshCReceive(bus,done);
-    //   });
-    //
-    //   it('producer attach -> producer push(5) -> consumer attach -> consumer receive(5)', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.pAttachPPush5CAttachCReceive5(bus,done);
-    //   });
-    //
-    //   it('producer push(5) -> producer attach -> consumer attach -> consumer receive(5)', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.pPUsh5PAttachCAttachCReceive5(bus,done);
-    //   });
-    //
-    //   it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.doNotExpireBeforeTTL(bus,done);
-    //   });
-    //
-    //   it('queue should expire: producer attach -> consumer attach -> producer push -> detach all', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.queueShouldExpire(bus,done);
-    //   });
-    //
-    //   it('produces and consumes 10 messages in 10 queues', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.testManyMessages(bus, 10, 10, done);
-    //   });
-    //
-    //   it('produces and consumes 100 messages in 10 queues', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.testManyMessages(bus, 100, 10, done);
-    //   });
-    //
-    //   it('produces and consumes 100 messages in 100 queues', function(done) {
-    //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //     tf.testManyMessages(bus, 100, 100, done);
-    //   });
-    //
-    // });
+    describe('pushing and consuming messages', function() {
+
+      it('producer attach -> producer push -> consumer attach -> consumer receive', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.pAttachPPushCAttachCReceive(bus,done);
+      });
+
+      it('producer attach -> consumer attach -> producer push -> consumer receive', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.pAttachCAttachPPushCReceive(bus,done);
+      });
+
+      it('consumer attach -> producer attach -> producer push -> consumer receive', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.cAttachPAttachPPUshCReceive(bus,done);
+      });
+
+      it('producer attach -> producer push(5) -> consumer attach -> consumer receive(5)', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.pAttachPPush5CAttachCReceive5(bus,done);
+      });
+
+      it('producer push(5) -> producer attach -> consumer attach -> consumer receive(5)', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.pPUsh5PAttachCAttachCReceive5(bus,done);
+      });
+
+      it('queue should not expire if detaching and re-attaching before queue ttl passes', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.doNotExpireBeforeTTL(bus,done);
+      });
+
+      it('queue should expire: producer attach -> consumer attach -> producer push -> detach all', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.queueShouldExpire(bus,done);
+      });
+
+      it('produces and consumes 10 messages in 10 queues', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.testManyMessages(bus, 10, 10, done);
+      });
+
+      it('produces and consumes 100 messages in 10 queues', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.testManyMessages(bus, 100, 10, done);
+      });
+
+      it('produces and consumes 100 messages in 100 queues', function(done) {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+        tf.testManyMessages(bus, 100, 100, done);
+      });
+
+    });
 
     it('consume max', function(done) {
       var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      console.log('XXXXXXXXXX STARTING TEST');
       tf.queueConsumesMax(bus,done);
     });
 
-    // it('consume without removing', function(done) {
-    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //   tf.queueConsumeWithoutRemoving(bus,done);
-    // });
+    it('consume without removing', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.queueConsumeWithoutRemoving(bus,done);
+    });
 
-    // it('count and flush messages', function(done) {
-    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //   tf.queueCountAndFlush(bus,done);
-    // });
+    it('count and flush messages', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.queueCountAndFlush(bus,done);
+    });
 
-    // it('should not receive additional messages if stop was called', function(done) {
-    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //   tf.queueNotReceiveWhenStopped(bus,done);
-    // });
+    it('should not receive additional messages if stop was called', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.queueNotReceiveWhenStopped(bus,done);
+    });
 
-    // it('consume reliable', function(done) {
-    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //   tf.queueConsumeReliable(bus,done);
-    // });
+    it('consume reliable', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.queueConsumeReliable(bus,done);
+    });
 
-    // it('should set and get arbitrary metadata', function(done) {
-    //   var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-    //   tf.queueGetSetMatadata(bus,done);
-    // });
+    it('should set and get arbitrary metadata', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.queueGetSetMatadata(bus,done);
+    });
 
   });
 
