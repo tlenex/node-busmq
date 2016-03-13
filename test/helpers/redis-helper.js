@@ -66,7 +66,7 @@ RedisHelper.prototype.open = function(args, done) {
   }
 
   this.process.stdout.on('data', function (data) {
-    console.log('<==== Redis pid: '+_this.process.pid+'\n'+data.toString()+'\n');
+    // console.log('<==== Redis pid: '+_this.process.pid+'\n'+data.toString()+'\n');
     var matches = data.toString().match(keyRE);
     if (matches !== null) {
       matches.forEach(parse);

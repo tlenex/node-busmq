@@ -149,169 +149,169 @@ describe('BusMQ Cluster', function() {
 
   });
 
-  // describe('channels', function() {
-  //
-  //   it('server listens -> client connects', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.channelServerListensClientConnects(bus,done);
-  //   });
-  //
-  //   it('client connects -> server listens', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.channelClientConnectsServerListens(bus,done);
-  //   });
-  //
-  //   it('reliable channel', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.reliableChannel(bus,done);
-  //   });
-  // });
+  describe('channels', function() {
 
-  // describe('persistency', function() {
-  //
-  //   it('saves and loads an object', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.persistencySavesAndLoads(bus,done);
-  //   });
-  //
-  //   it('persists 10 objects', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.testManySavesAndLoades(bus, 10, done);
-  //   });
-  //
-  //   it('persists 100 objects', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.testManySavesAndLoades(bus, 100, done);
-  //   });
-  //
-  //   it('persists 1000 objects', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.testManySavesAndLoades(bus, 1000, done);
-  //   });
-  // });
+    it('server listens -> client connects', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.channelServerListensClientConnects(bus,done);
+    });
 
-  // describe('pubsub', function() {
-  //
-  //   it('should receive subscribe/unsubscribe and message events', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-  //     tf.pubSubSubscribeUnsubscribe(bus,done);
-  //   });
-  // });
+    it('client connects -> server listens', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.channelClientConnectsServerListens(bus,done);
+    });
 
-  // describe('federation', function() {
-  //
-  //   var fedserver;
-  //
-  //   beforeEach(function(done) {
-  //     fedserver = http.createServer();
-  //     fedserver.listen(9777, function() {
-  //       done();
-  //     });
-  //   });
-  //
-  //   afterEach(function(done) {
-  //     fedserver.on('error', function() {}); // ignore socket errors at this point
-  //     setTimeout(function() {
-  //       fedserver && fedserver.close();
-  //       done();
-  //     }, 100);
-  //   });
-  //
-  //   function fedBusCreator(federate) {
-  //     var options = {
-  //       redis: redisUrls,
-  //       driver: 'ioredis',
-  //       logger: console,
-  //       layout: 'cluster',
-  //       federate: federate
-  //     };
-  //     return Bus.create(options);
-  //   }
-  //
-  //   it('federates queue events', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.fedFederateQueueEvents(bus, done, fedBusCreator);
-  //   });
-  //
-  //   it('federates channel events', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
-  //     tf.fedFederateChannelEvents(bus, done, fedBusCreator);
-  //   });
-  //
-  //   it('federates persisted objects', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
-  //     tf.fedFederatePersistedObjects(bus, done, fedBusCreator);
-  //   });
-  //
-  //   it('federate pubsub events', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
-  //     tf.fedPubSubEvents(bus, done, fedBusCreator);
-  //   });
-  //
-  //   it('federation websocket of queue closes and reopens', function(done) {
-  //     var fedserver = http.createServer();
-  //     fedserver.listen(9788, function() {
-  //       var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //       tf.fedWebsocketQueueClosesReopens(bus, fedBusCreator, fedserver, 9788, function() {
-  //         fedserver.on('error', function() {}); // ignore socket errors at this point
-  //         setTimeout(function() {
-  //           fedserver && fedserver.close();
-  //           done();
-  //         }, 100);
-  //       });
-  //     });
-  //   });
-  //
-  //   it('federation websocket of channel closes and reopens', function(done) {
-  //     var fedserver = http.createServer();
-  //     fedserver.listen(9789, function() {
-  //       var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //       tf.fedWebsocketChannelClosesReopens(bus, fedBusCreator, fedserver, 9789, function() {
-  //         fedserver.on('error', function() {}); // ignore socket errors at this point
-  //         setTimeout(function() {
-  //           fedserver && fedserver.close();
-  //           done();
-  //         }, 100);
-  //       });
-  //     });
-  //   });
-  //
-  //   it('does not allow federation with wrong secret', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, secret: 'thisisit'}, logger: console});
-  //     tf.fedNotWithWrongSecret(bus, done, fedBusCreator);
-  //   });
-  //
-  //   it('produces and consumes 10 messages in 10 queues over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManyMessagesOverFederation(bus, 10, 10, done, fedBusCreator);
-  //   });
-  //
-  //   it('produces and consumes 100 messages in 10 queues over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManyMessagesOverFederation(bus, 100, 10, done, fedBusCreator);
-  //   });
-  //
-  //   it('produces and consumes 100 messages in 100 queues over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManyMessagesOverFederation(bus, 100, 100, done, fedBusCreator);
-  //   });
-  //
-  //   it('persists 10 objects over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManySavesAndLoadesOverFederation(bus, 10, done, fedBusCreator);
-  //   });
-  //
-  //   it('persists 100 objects over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManySavesAndLoadesOverFederation(bus, 100, done, fedBusCreator);
-  //   });
-  //
-  //   it('persists 500 objects over federation', function(done) {
-  //     var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-  //     tf.testManySavesAndLoadesOverFederation(bus, 500, done, fedBusCreator);
-  //   });
-  //
-  // });
+    it('reliable channel', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.reliableChannel(bus,done);
+    });
+  });
+
+  describe('persistency', function() {
+
+    it('saves and loads an object', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.persistencySavesAndLoads(bus,done);
+    });
+
+    it('persists 10 objects', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.testManySavesAndLoades(bus, 10, done);
+    });
+
+    it('persists 100 objects', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.testManySavesAndLoades(bus, 100, done);
+    });
+
+    it('persists 1000 objects', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.testManySavesAndLoades(bus, 1000, done);
+    });
+  });
+
+  describe('pubsub', function() {
+
+    it('should receive subscribe/unsubscribe and message events', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
+      tf.pubSubSubscribeUnsubscribe(bus,done);
+    });
+  });
+
+  describe('federation', function() {
+
+    var fedserver;
+
+    beforeEach(function(done) {
+      fedserver = http.createServer();
+      fedserver.listen(9777, function() {
+        done();
+      });
+    });
+
+    afterEach(function(done) {
+      fedserver.on('error', function() {}); // ignore socket errors at this point
+      setTimeout(function() {
+        fedserver && fedserver.close();
+        done();
+      }, 100);
+    });
+
+    function fedBusCreator(federate) {
+      var options = {
+        redis: redisUrls,
+        driver: 'ioredis',
+        logger: console,
+        layout: 'cluster',
+        federate: federate
+      };
+      return Bus.create(options);
+    }
+
+    it('federates queue events', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.fedFederateQueueEvents(bus, done, fedBusCreator);
+    });
+
+    it('federates channel events', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
+      tf.fedFederateChannelEvents(bus, done, fedBusCreator);
+    });
+
+    it('federates persisted objects', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
+      tf.fedFederatePersistedObjects(bus, done, fedBusCreator);
+    });
+
+    it('federate pubsub events', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver}, logger: console});
+      tf.fedPubSubEvents(bus, done, fedBusCreator);
+    });
+
+    it('federation websocket of queue closes and reopens', function(done) {
+      var fedserver = http.createServer();
+      fedserver.listen(9788, function() {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+        tf.fedWebsocketQueueClosesReopens(bus, fedBusCreator, fedserver, 9788, function() {
+          fedserver.on('error', function() {}); // ignore socket errors at this point
+          setTimeout(function() {
+            fedserver && fedserver.close();
+            done();
+          }, 100);
+        });
+      });
+    });
+
+    it('federation websocket of channel closes and reopens', function(done) {
+      var fedserver = http.createServer();
+      fedserver.listen(9789, function() {
+        var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+        tf.fedWebsocketChannelClosesReopens(bus, fedBusCreator, fedserver, 9789, function() {
+          fedserver.on('error', function() {}); // ignore socket errors at this point
+          setTimeout(function() {
+            fedserver && fedserver.close();
+            done();
+          }, 100);
+        });
+      });
+    });
+
+    it('does not allow federation with wrong secret', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, secret: 'thisisit'}, logger: console});
+      tf.fedNotWithWrongSecret(bus, done, fedBusCreator);
+    });
+
+    it('produces and consumes 10 messages in 10 queues over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManyMessagesOverFederation(bus, 10, 10, done, fedBusCreator);
+    });
+
+    it('produces and consumes 100 messages in 10 queues over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManyMessagesOverFederation(bus, 100, 10, done, fedBusCreator);
+    });
+
+    it('produces and consumes 100 messages in 100 queues over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManyMessagesOverFederation(bus, 100, 100, done, fedBusCreator);
+    });
+
+    it('persists 10 objects over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManySavesAndLoadesOverFederation(bus, 10, done, fedBusCreator);
+    });
+
+    it('persists 100 objects over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManySavesAndLoadesOverFederation(bus, 100, done, fedBusCreator);
+    });
+
+    it('persists 500 objects over federation', function(done) {
+      var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
+      tf.testManySavesAndLoadesOverFederation(bus, 500, done, fedBusCreator);
+    });
+
+  });
 });
 
 

@@ -46,10 +46,10 @@ function initializeCluster(done) {
       ///Wait a bit for cluster to settle
       setTimeout(
         function() {
-          console.log('XXXXXXXXXXXX END INITIALIZATION XXXXXXXXXXXX');
+          console.log('... cluster ready --');
           done && done();
         },
-        2500);
+        1500);
     });
 }
 
