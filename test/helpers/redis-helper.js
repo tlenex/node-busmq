@@ -118,6 +118,9 @@ RedisHelper.prototype.close = function(callback) {
 
   this.isClosing = true;
 
+  //remove data handler
+  this.process.stdout.on('data', function (data) {});
+
   if (callback) {
     this.process.on('close', function () {
       callback(null);

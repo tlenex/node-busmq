@@ -1237,11 +1237,15 @@ function pubSubSubscribeUnsubscribe(bus,done) {
       p.on('error', done);
       p.publish('hello', function(err, count) {
         Should(err).be.exactly(null);
-        count.should.be.exactly(1);
+        if (bus.options.layout !== 'cluster') {
+          count.should.be.exactly( 1 );
+        }
       });
       p.publish('world', function(err, count) {
         Should(err).be.exactly(null);
-        count.should.be.exactly(1);
+        if (bus.options.layout !== 'cluster') {
+          count.should.be.exactly( 1 );
+        }
         if (_count() === 3) {
           s.unsubscribe();
         }
@@ -1496,11 +1500,15 @@ function fedPubSubEvents(bus, done, fedBusCreator) {
             p.on('error', done);
             p.publish('hello', function(err, count) {
               Should(err).be.exactly(null);
-              count.should.be.exactly(1);
+              if (bus.options.layout !== 'cluster') {
+                count.should.be.exactly( 1 );
+              }
             });
             p.publish('world', function(err, count) {
               Should(err).be.exactly(null);
-              count.should.be.exactly(1);
+              if (bus.options.layout !== 'cluster') {
+                count.should.be.exactly( 1 );
+              }
               if (_count() === 3) {
                 s.unsubscribe();
               }

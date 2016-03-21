@@ -118,7 +118,6 @@ describe('BusMQ Cluster', function() {
 
     it('consume max', function(done) {
       var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: redisUrls, logger: console});
-      console.log('XXXXXXXXXX STARTING TEST');
       tf.queueConsumesMax(bus,done);
     });
 
