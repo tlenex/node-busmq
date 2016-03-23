@@ -74,7 +74,8 @@ to create `queue`s, `channel`s, `pubsub`s and `persistent` objects.
 Node processes connecting to the same bus have access to and can use all queues, channels pubsubs and persistent objects.
 
 busmq uses by default [node_redis](https://github.com/mranney/node_redis) as the communication driver,
-bu ioredis may also be used. Use the `driver` option when creating the bus instance to specify the driver.
+but ioredis may also be used, and in fact is mandatory when connecting to a cluster or sentinels.
+Use the `driver` option when creating the bus instance.
 
 If the redis server requires an authentication password, specify it in auth part of the redis connection url.
 
@@ -84,10 +85,14 @@ If the redis server requires an authentication password, specify it in auth part
 var Bus = require('busmq');
 
 var bus = Bus.create({redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
-// or specify the node_redis driver explicitly
-// var bus = Bus.create({driver: require('redis'), redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// or specify the node-redis driver explicitly
+// var bus = Bus.create({driver: 'node-redis', redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
 // or specify the ioredis driver explicitly
-// var bus = Bus.create({driver: require('ioredis'), redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// var bus = Bus.create({driver: 'ioredis', redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// or specify the ioredis driver and cluster
+// var bus = Bus.create({driver: 'ioredis', layout: 'cluster', redis: ['redis://192.168.0.1:6379', 'redis://authpass@192.168.0.2:6379']);
+// or specify the ioredis driver and sentinel
+// var bus = Bus.create({driver: 'ioredis', layout: 'sentinel', redis: ['redis://192.168.0.1:26379']);
 
 bus.on('error', function(err) {
   // an error has occurred
@@ -620,7 +625,9 @@ Phew, that was long. Let's see the API.
 Create a new bus instance. Options:
 
 * `driver` -  specify the redis connection driver to use.
-              This should be either `require('redis')` or `require('ioredis')`. The default is `require('redis')`
+              This should be either `node-redis` or `ioredis`. The default is `node-redis`
+* `layout` - specifies the type of redis setup to connect to. This should be one of `direct`, `cluster` or `sentinels`.
+             The default is `direct`.
 * `redis` -  specifies the redis servers to connect to. Can be a string or an array of string urls.
              A valid url has the form `redis://[auth_pass@]<host_or_ip>[:port]`.
 * `federate` - an object defining federation options:
@@ -641,10 +648,6 @@ Attach a logger to the bus instance. Returns the bus instance.
 ##### bus#debug(on)
 
 Turn on or off printing of debug messages to the log. default is off.
-
-##### bus#withRedis(redis)
-
-Use the provided `node_redis` client to create connections. Returns the bus instance.
 
 ##### bus#connect()
 
