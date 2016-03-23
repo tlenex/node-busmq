@@ -2139,4 +2139,3 @@ describe('All bus tests', function() {
   runTests('node-redis', require('redis'));
   runTests('ioredis', require('ioredis'));
 });
-

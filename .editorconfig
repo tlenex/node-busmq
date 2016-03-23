@@ -1,0 +1,20 @@
+# EditorConfig
+
+# top-most EditorConfig file
+root = true
+
+# Indentation override for all JS under lib directory
+[lib/**.js]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+# Indentation override for all JS under test directory
+[test/**.js]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+indent_style = space
+indent_size = 2
