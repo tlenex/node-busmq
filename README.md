@@ -30,6 +30,7 @@ Thanks to [ChiperSoft](https://github.com/ChiperSoft) for pointing this out!
 * High availability through redis master-slave setup and stateless node processes
 * Tolerance to dynamic addition of redis instances during scale out
 * Choice of connection driver - [node_redis](https://github.com/NodeRedis/node_redis) or [ioredis](https://github.com/luin/ioredis) (thanks to [bgrieder](https://github.com/bgrieder))
+* Out-of-the-box support for Redis Sentinels and Clusters when using ioredis driver (thanks to [bgrieder](https://github.com/bgrieder))
 * Connect to the bus from a browser
 * Fast
 
@@ -893,7 +894,11 @@ Returns `true` if connected to the channel, `false` if not connected.
 Publishes a message on the pubsub channel. Only currently subscribed clients will receive the message.
 
 * `message` - the message to publish
-* `callback` - invoked after the message was actually published. receives `err` and the number of subscribers that received the message. 
+* `callback` - invoked after the message was actually published.
+  receives `err` and the number of subscribers that received the message.
+  _NOTE:_ when in cluster mode, the number of subscribers only includes the subscribers on the same redis node that received the
+  publish request and not across all the cluster
+
 
 ##### pubsub#subscribe()
 
