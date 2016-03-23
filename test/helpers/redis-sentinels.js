@@ -23,7 +23,8 @@ function master(done) {
   var dir = __dirname+'/../tmp/sentinels/master';
   fs.mkdirSync(dir);
   fs.writeFileSync(dir+'/redis.conf',
-    'port 6379\n'+
+    'port 6279\n'+
+    'maxclients 200\n'+
     'dir '+dir
   );
   redisHelper.open([dir+'/redis.conf'],done);
@@ -33,9 +34,10 @@ function slave(num, done) {
   var dir = __dirname+'/../tmp/sentinels/slave'+num;
   fs.mkdirSync(dir);
   fs.writeFileSync(dir+'/redis.conf',
-    'port '+(6379+num)+'\n'+
+    'port '+(6279+num)+'\n'+
     'dir '+dir+'\n'+
-    'slaveof 127.0.0.1 6379'
+    'slaveof 127.0.0.1 6279\n'+
+    'maxclients 200'
   );
   redisHelper.open([dir+'/redis.conf'],done);
 }
@@ -44,8 +46,9 @@ function sentinel(num, done){
   var dir = __dirname+'/../tmp/sentinels/sentinel'+num;
   fs.mkdirSync(dir);
   fs.writeFileSync(dir+'/redis.conf',
-    'port '+(26379+num-1)+'\n'+
-    'sentinel monitor mymaster 127.0.0.1 6379 2'+'\n'+
+    'port '+(26279+num-1)+'\n'+
+    'maxclients 200\n'+
+    'sentinel monitor mymaster 127.0.0.1 6279 2'+'\n'+
     'sentinel down-after-milliseconds mymaster 5000'+'\n'+
     'sentinel failover-timeout mymaster 60000'+'\n'+
     'sentinel config-epoch mymaster 3'+'\n'+

@@ -30,7 +30,7 @@ RedisGroup.prototype.start = function(done) {
   var _this = this;
   this.ports.forEach(function(port,i) {
 
-    var args = ['--port', port];
+    var args = ['--port', port, '--maxclients', '200'];
     if (_this.auths[i]) {
       args.push('--requirepass');
       args.push(_this.auths[i]);

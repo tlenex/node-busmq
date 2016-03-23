@@ -45,6 +45,7 @@ RedisHelper.prototype.open = function(args, done) {
       case 'error':
       case 'notlisten':
         _this.isOpening = false;
+        console.log('<==== Redis pid: '+_this.process.pid+'\n'+value.toString()+'\n');
         return _this.emit('error', 'Invalid port number');
 
       case 'serverisnowready':
@@ -65,27 +66,34 @@ RedisHelper.prototype.open = function(args, done) {
     }
   }
 
-  this.process.stdout.on('data', function (data) {
-    // console.log('<==== Redis pid: '+_this.process.pid+'\n'+data.toString()+'\n');
+  function onData(data) {
+    //console.log('<==== Redis pid: '+_this.process.pid+'\n'+data.toString()+'\n');
     var matches = data.toString().match(keyRE);
     if (matches !== null) {
       matches.forEach(parse);
     }
-  });
+  }
 
-  this.process.on('close', function () {
+  function onError(err) {
+    done(new Error(err));
+  }
+
+  function onReady() {
+    done(null, _this);
+  }
+
+  this.on('error', onError);
+  this.on('ready', onReady);
+  this.process.stdout.on('data', onData);
+  this.process.once('exit', function () {
+    _this.process.stdout.removeListener('data', onData);
     _this.process = null;
     _this.isRunning = false;
     _this.isClosing = false;
+    _this.removeListener('error', onError);
+    _this.removeListener('ready', onReady);
   });
 
-  this.on('error', function(err) {
-    done(new Error(err));
-  });
-
-  this.on('ready', function() {
-    done(null, _this);
-  });
 
   // process.on('exit', function () {
   //   self.close();
@@ -118,11 +126,8 @@ RedisHelper.prototype.close = function(callback) {
 
   this.isClosing = true;
 
-  //remove data handler
-  this.process.stdout.on('data', function (data) {});
-
   if (callback) {
-    this.process.on('close', function () {
+    this.process.once('exit', function () {
       callback(null);
     });
   }

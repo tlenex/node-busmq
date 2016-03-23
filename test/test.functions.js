@@ -1673,6 +1673,7 @@ function fedWebsocketChannelClosesReopens(bus, fedBusCreator, fedserver, port, d
         // close the fedserver of the first bus and terminate the websockets to force
         // the websockets to go to the other bus.
         // stop the original bus from accepting new federate connections
+        fedserver.removeAllListeners();
         fedserver.close();
         // create the other bus to listen for ws connections to simulate multiple processes
         fedserver = http.createServer();

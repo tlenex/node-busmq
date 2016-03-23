@@ -10,7 +10,6 @@ var Bus = require('../lib/bus');
 var tf = require('./test.functions');
 var RedisGroup = require('./helpers/redis-group');
 
-
 var redises = [];
 
 describe('BusMQ direct connectivity using node-redis', function() {
@@ -33,7 +32,7 @@ describe('BusMQ direct connectivity using node-redis', function() {
 
   // stop all redis servers
   after(function(done) {
-    redisGroup.stop(done);
+    redisGroup.stop(function() {done();});
   });
 
   describe('bus connection', function() {
@@ -253,12 +252,13 @@ describe('BusMQ direct connectivity using node-redis', function() {
 
     it('federation websocket of queue closes and reopens', function(done) {
       var fedserver = http.createServer();
-      fedserver.listen(9788, function() {
+      fedserver.listen(9768, function() {
         var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-        tf.fedWebsocketQueueClosesReopens(bus, fedBusCreator, fedserver, 9788, function() {
+        tf.fedWebsocketQueueClosesReopens(bus, fedBusCreator, fedserver, 9768, function() {
           fedserver.on('error', function() {}); // ignore socket errors at this point
+          bus.options.federate.server.on('error', function() {}); // ignore socket errors at this point
           setTimeout(function() {
-            fedserver && fedserver.close();
+            //bus.options.federate.server && bus.options.federate.server.close();
             done();
           }, 100);
         });
@@ -267,12 +267,13 @@ describe('BusMQ direct connectivity using node-redis', function() {
 
     it('federation websocket of channel closes and reopens', function(done) {
       var fedserver = http.createServer();
-      fedserver.listen(9789, function() {
+      fedserver.listen(9769, function() {
         var bus = Bus.create({redis: redisUrls, federate: {server: fedserver, path: '/federate'}, logger: console});
-        tf.fedWebsocketChannelClosesReopens(bus, fedBusCreator, fedserver, 9789, function() {
+        tf.fedWebsocketChannelClosesReopens(bus, fedBusCreator, fedserver, 9769, function() {
           fedserver.on('error', function() {}); // ignore socket errors at this point
+          bus.options.federate.server.on('error', function() {}); // ignore socket errors at this point
           setTimeout(function() {
-            fedserver && fedserver.close();
+            //bus.options.federate.server && bus.options.federate.server.close();
             done();
           }, 100);
         });

@@ -1,7 +1,31 @@
 var redisHelper = require('./redis-helper');
 var fs = require('fs');
-var childProcess = require('child_process');
-var suppose = require('suppose');
+var spawn = require('child_process').spawn;
+
+function startRedisCluster(args, done) {
+  const pr = spawn(__dirname+'/redis-trib.rb', args);
+
+  var d = '';
+  pr.stdout.on('data', function(data) {
+    d = d + data.toString();
+    if (d.indexOf("type 'yes' to accept") !== -1) {
+      pr.stdin.write('yes\n');
+    }
+  });
+
+  pr.stderr.on('data', function(data) {
+    console.log('stderr: ' + data);
+  });
+
+  pr.on('close', function(code) {
+    done(null, code);
+  });
+
+  pr.on('error', function(err) {
+    done(err);
+  })
+}
+
 
 function RedisCluster() {
   this.redises= {};
@@ -26,6 +50,7 @@ function startInstance(index, done) {
   fs.mkdirSync(dir);
   fs.writeFileSync(dir+'/redis.conf',
     'port 700'+index+'\n'+
+    'maxclients 200\n'+
     'cluster-enabled yes'+'\n'+
     'cluster-config-file nodes.conf'+'\n'+
     'cluster-node-timeout 5000'+'\n'+
@@ -37,20 +62,16 @@ function startInstance(index, done) {
 
 function initializeCluster(done) {
   console.log('--Please wait, initializing cluster....');
-  suppose(__dirname+'/redis-trib.rb', ['create', '--replicas', '1', '127.0.0.1:7000', '127.0.0.1:7001', '127.0.0.1:7002', '127.0.0.1:7003', '127.0.0.1:7004', '127.0.0.1:7005'])
-    .when(/.*?\(type 'yes' to accept\)\:/).respond('yes\n')
-    .on('error', function(err){
+  startRedisCluster(['create', '--replicas', '1', '127.0.0.1:7000', '127.0.0.1:7001', '127.0.0.1:7002', '127.0.0.1:7003', '127.0.0.1:7004', '127.0.0.1:7005'], function(err) {
+    if (err) {
       done && done(err);
-    })
-    .end(function(code){
-      ///Wait a bit for cluster to settle
-      setTimeout(
-        function() {
-          console.log('... cluster ready --');
-          done && done();
-        },
-        1500);
-    });
+      return;
+    }
+    setTimeout(function() {
+      console.log('... cluster ready --');
+      done && done();
+    }, 1500);
+  });
 }
 
 
