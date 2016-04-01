@@ -1787,6 +1787,8 @@ function produceAndConsumeOverFederation(pBus, cBus, fedTo, messages, queues, cb
               }
             });
             c.on('detached', function() {
+              cFed.removeListener('error', cb);// don't care any more about errors
+              cFed.on('error', function () {});// don't care any more about errors
               cFed.close();
             });
             c.on('attached', function() {

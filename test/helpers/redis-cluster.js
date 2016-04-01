@@ -23,7 +23,7 @@ function startRedisCluster(args, done) {
 
   pr.on('error', function(err) {
     done(err);
-  })
+  });
 }
 
 

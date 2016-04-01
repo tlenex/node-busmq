@@ -65,6 +65,10 @@
   ],
   "license": "MIT",
   "scripts": {
-    "test": "mocha test"
+    "test": "npm run test1 && npm run test2 && npm run test3 && npm run test4",
+    "test1": "mocha test/test1.*.mocha.js",
+    "test2": "mocha test/test2.*.mocha.js",
+    "test3": "mocha test/test3.*.mocha.js",
+    "test4": "mocha test/test4.*.mocha.js"
   }
 }
