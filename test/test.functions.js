@@ -1205,28 +1205,37 @@ function testManySavesAndLoades(bus, objects, done) {
 //////////////////////////////////////////////
 
 function pubSubSubscribeUnsubscribe(bus,done) {
-  var count = 0;
 
-  function _count() {
-    return ++count;
-  }
-  
   bus.on('error', done);
   bus.on('online', function() {
+    var count = {
+      hello: 0,
+      world: 0
+    };
+
+    function _count(message) {
+      ++count[message];
+      if (count.hello === 2 && count.world === 2) {
+        s2.unsubscribe();
+        s.unsubscribe();
+      }
+      return count;
+    }
+
     var qName = 'test' + Math.random();
-    // create subscriber
+
+    // create 2 subscribers
+    var s2 = bus.pubsub(qName);
+    s2.on('error', done);
+    s2.on('message', function(message) {
+      _count(message);
+    });
+    s2.subscribe();
+
     var s = bus.pubsub(qName);
     s.on('error', done);
     s.on('message', function(message) {
-      var c = _count();
-      if (c === 1) {
-        message.should.be.exactly('hello');
-      } else {
-        message.should.be.exactly('world');
-      }
-      if (c === 3) {
-        s.unsubscribe();
-      }
+      _count(message);
     });
     s.on('unsubscribed', function() {
       bus.disconnect();
@@ -1235,23 +1244,15 @@ function pubSubSubscribeUnsubscribe(bus,done) {
       // create publisher
       var p = bus.pubsub(qName);
       p.on('error', done);
-      p.publish('hello', function(err, count) {
-        Should(err).be.exactly(null);
-        if (bus.options.layout !== 'cluster') {
-          count.should.be.exactly( 1 );
-        }
+      p.publish('hello', function(err) {
+        Should(err).be.exactly(undefined);
       });
-      p.publish('world', function(err, count) {
-        Should(err).be.exactly(null);
-        if (bus.options.layout !== 'cluster') {
-          count.should.be.exactly( 1 );
-        }
-        if (_count() === 3) {
-          s.unsubscribe();
-        }
+      p.publish('world', function(err) {
+        Should(err).be.exactly(undefined);
       });
     });
     s.subscribe();
+
   });
   bus.on('offline', function() {
     done();
@@ -1455,12 +1456,7 @@ function fedFederatePersistedObjects(bus, done, fedBusCreator){
 }
 
 function fedPubSubEvents(bus, done, fedBusCreator) {
-  var count = 0;
 
-  function _count() {
-    return ++count;
-  }
-  
   bus.on('error', function(err) {
     done(err);
   });
@@ -1471,22 +1467,42 @@ function fedPubSubEvents(bus, done, fedBusCreator) {
       done(err);
     });
     busFed.on('online', function() {
+      var subs = [];
+      var count = {
+        hello: 0,
+        world: 0
+      };
+
+      function _count(message) {
+        ++count[message];
+        if (count.hello === 2 && count.world === 2) {
+          subs.forEach(function(s) {
+            s.unsubscribe();
+          });
+          subs = [];
+        }
+        return count;
+      }
+
       var qName = 'test' + Math.random();
       var pFed;
-      // create subscriber
+
+      // create 2 subscribers
+
+      var s2 = bus.pubsub(qName);
+      s2.on('error', done);
+      s2.on('message', function(message) {
+        _count(message);
+      });
+      s2.subscribe();
+      subs.push(s2);
+
       var fed = busFed.federate(busFed.pubsub(qName), 'http://127.0.0.1:9777');
       fed.on('error', done);
       fed.on('ready', function(s) {
+        subs.push(s);
         s.on('message', function(message) {
-          var c = _count();
-          if (c === 1) {
-            message.should.be.exactly('hello');
-          } else {
-            message.should.be.exactly('world');
-          }
-          if (c === 3) {
-            s.unsubscribe();
-          }
+          _count(message);
         });
         s.on('unsubscribed', function() {
           pFed.close();
@@ -1498,20 +1514,11 @@ function fedPubSubEvents(bus, done, fedBusCreator) {
           pFed.on('error', done);
           pFed.on('ready', function(p) {
             p.on('error', done);
-            p.publish('hello', function(err, count) {
-              Should(err).be.exactly(null);
-              if (bus.options.layout !== 'cluster') {
-                count.should.be.exactly( 1 );
-              }
+            p.publish('hello', function(err) {
+              Should(err).be.exactly(undefined);
             });
-            p.publish('world', function(err, count) {
-              Should(err).be.exactly(null);
-              if (bus.options.layout !== 'cluster') {
-                count.should.be.exactly( 1 );
-              }
-              if (_count() === 3) {
-                s.unsubscribe();
-              }
+            p.publish('world', function(err) {
+              Should(err).be.exactly(undefined);
             });
           });
         });
