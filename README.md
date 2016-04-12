@@ -897,11 +897,8 @@ Returns `true` if connected to the channel, `false` if not connected.
 Publishes a message on the pubsub channel. Only currently subscribed clients will receive the message.
 
 * `message` - the message to publish
-* `callback` - invoked after the message was actually published.
-  receives `err` and the number of subscribers that received the message.
-  _NOTE:_ when in cluster mode, the number of subscribers only includes the subscribers on the same redis node that received the
-  publish request and not across all the cluster
-
+* `callback` - invoked after the message was actually published. receives `err` if there was an error. _note: starting
+from version 1.5.0, the callback no longer receives the number of subscribers that received the message._
 
 ##### pubsub#subscribe()
 
