@@ -65,6 +65,7 @@
   ],
   "license": "MIT",
   "scripts": {
+    "browser": "browserify --standalone busmq --entry . > busmq.js && uglifyjs busmq.js > busmq.min.js",
     "test": "npm run test1 && npm run test2 && npm run test3 && npm run test4",
     "test1": "mocha test/test1.*.mocha.js",
     "test2": "mocha test/test2.*.mocha.js",
