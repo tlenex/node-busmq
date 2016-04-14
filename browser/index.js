@@ -19,12 +19,7 @@ util.inherits(BusClient, events.EventEmitter);
 BusClient.prototype._federateObject = function(object, cb) {
   var fed = this.bus.federate(object, this.url);
   fed.on('ready', function(o) {
-    fed.on('reconnecting', function() {
-      o.emit('reconnecting');
-    });
-    fed.on('reconnected', function() {
-      o.emit('reconnected');
-    });
+    o.fed = fed;
     cb(null, o);
   });
   fed.on('error', cb);
