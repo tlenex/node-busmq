@@ -32494,36 +32494,34 @@ function BusClient(url, secret) {
 
 util.inherits(BusClient, events.EventEmitter);
 
-BusClient.prototype.queue = function(name, cb) {
-  var fed = this.bus.federate(this.bus.queue(name), this.url);
-  fed.on('ready', function(q) {
-    cb(null, q);
+BusClient.prototype._federateObject = function(object, cb) {
+  var fed = this.bus.federate(object, this.url);
+  fed.on('ready', function(o) {
+    fed.on('reconnecting', function() {
+      o.emit('reconnecting');
+    });
+    fed.on('reconnected', function() {
+      o.emit('reconnected');
+    });
+    cb(null, o);
   });
   fed.on('error', cb);
+};
+
+BusClient.prototype.queue = function(name, cb) {
+  this._federateObject(this.bus.queue(name), cb);
 };
 
 BusClient.prototype.channel = function(name, local, remote, cb) {
-  var fed = this.bus.federate(this.bus.channel(name, local, remote), this.url);
-  fed.on('ready', function(c) {
-    cb(null, c);
-  });
-  fed.on('error', cb);
+  this._federateObject(this.bus.channel(name, local, remote), cb);
 };
 
 BusClient.prototype.pubsub = function(name, cb) {
-  var fed = this.bus.federate(this.bus.pubsub(name), this.url);
-  fed.on('ready', function(q) {
-    cb(null, q);
-  });
-  fed.on('error', cb);
+  this._federateObject(this.bus.pubsub(name), cb);
 };
 
 BusClient.prototype.persistify = function(name, object, attributes, cb) {
-  var fed = this.bus.federate(this.bus.persistify(name, object, attributes), this.url);
-  fed.on('ready', function(p) {
-    cb(null, p);
-  });
-  fed.on('error', cb);
+  this._federateObject(this.bus.persistify(name, object, attributes), cb);
 };
 
 exports = module.exports = function(url, secret) {
