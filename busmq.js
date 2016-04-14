@@ -1312,6 +1312,7 @@ function Federate(object, target, wspool, options) {
   events.EventEmitter.call(this);
   this.object = object;
   this.target = target;
+  this.reconnecting = false;
   this.channelpool = wspool;
   this.state = {};
   this._options(options);
@@ -1510,7 +1511,11 @@ Federate.prototype._reconnect = function(reason) {
     this.emit('error', 'cannot reconnect - already connected');
     return;
   }
-  this.emit('reconnecting', reason);
+
+  if (!this.reconnecting) {
+    this.reconnecting = true;
+    this.emit('reconnecting', reason);
+  }
   this._attachWs(true);
 };
 
@@ -1614,6 +1619,7 @@ Federate.prototype._federate = function(reconnect) {
           }
         }
       });
+      _this.reconnecting = false;
       _this.emit('reconnected', _this.object);
     } else {
       _this.emit('ready', _this.object);
