@@ -956,7 +956,9 @@ Close the federation object.
 
 * `ready` - emitted when the federation setup is ready. The callback receives the bus object to use.
 * `unauthorized` - incorrect secret key was used to authenticate with the federation server
-* `close` - the federation connection closed
+* `reconnecting` - the federation connection was disconnected and is now reconnecting
+* `reconnected` - the federation connection has successfully reconnected
+* `close` - the federation connection closed permanently
 * `error` - some error occurred. the callback receives the `error` message
 
 ### Browser API
