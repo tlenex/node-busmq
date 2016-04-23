@@ -590,7 +590,7 @@ It works by utilizing federation to the bus server over native browser websocket
 Generating the latest `busmq.js` and `busmq.min.js` files requires cloning the git repo.
 
 ```bash
-git clone https://github.com/capriza/node-busmq
+git clone https://github.com/capriza/node-busmq.git
 cd node-busmq
 npm install
 npm run browser
