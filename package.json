@@ -40,7 +40,9 @@
   },
   "devDependencies": {
     "mocha": "2.4.5",
-    "should": "4.0.4"
+    "should": "4.0.4",
+    "browserify": "13.0.0",
+    "uglify-js": "2.6.2"
   },
   "browser": {
     "./index.js": "./browser/index.js",

@@ -66,6 +66,12 @@ stabilizes after the addition.
 High availability for redis is achieved by using standard redis high availability setups, such as
 [Redis Cluster](http://redis.io/topics/cluster-tutorial), [Redis Sentinal](http://redis.io/topics/sentinel) or [AWS ElasticCache](http://aws.amazon.com/elasticache/)
 
+## Installation
+
+```bash
+npm install busmq
+```
+
 ## Bus
 
 The bus holds connections to one or more redis instances and is used
@@ -578,6 +584,17 @@ However, increasing the number of queues by an order of magnitude does effect th
 
 Version 0.11.0 introduced browser support using browserify for connecting to a running bus.
 It works by utilizing federation to the bus server over native browser websockets.
+
+### Building
+
+Generating the latest `busmq.js` and `busmq.min.js` files requires cloning the git repo.
+
+```bash
+git clone https://github.com/capriza/node-busmq
+cd node-busmq
+npm install
+npm run browser
+```
 
 #### Usage
 
